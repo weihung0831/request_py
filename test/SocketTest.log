@@ -1,0 +1,9 @@
+2024-01-02 15:04:41,211 - 已傳送訊息：<CNC><API>SKY_conn_status</API><ConnKey>123</ConnKey><SendId>0</SendId></CNC>
+2024-01-02 15:04:41,224 - 已收到回覆：<CNC><SendId /><ErrCode /><SkyConn_status><MachineNo>1</MachineNo><Status>0</Status></SkyConn_status><SkyConn_status><MachineNo>2</MachineNo><Status>0</Status></SkyConn_status><SkyConn_status><MachineNo>3</MachineNo><Status>0</Status></SkyConn_status><SkyConn_status><MachineNo>4</MachineNo><Status>0</Status></SkyConn_status></CNC>
+
+2024-01-02 15:04:43,235 - 已傳送訊息：<CNC><API>SKY_conn_status</API><ConnKey>123</ConnKey><SendId>1</SendId></CNC>
+2024-01-02 15:04:43,252 - 已收到回覆：<CNC><SendId /><ErrCode /><SkyConn_status><MachineNo>1</MachineNo><Status>0</Status></SkyConn_status><SkyConn_status><MachineNo>2</MachineNo><Status>0</Status></SkyConn_status><SkyConn_status><MachineNo>3</MachineNo><Status>0</Status></SkyConn_status><SkyConn_status><MachineNo>4</MachineNo><Status>0</Status></SkyConn_status></CNC>
+
+2024-01-02 15:04:45,259 - 已傳送訊息：<CNC><API>SKY_conn_status</API><ConnKey>123</ConnKey><SendId>2</SendId></CNC>
+2024-01-02 15:04:45,267 - 已收到回覆：<CNC><SendId /><ErrCode /><SkyConn_status><MachineNo>1</MachineNo><Status>0</Status></SkyConn_status><SkyConn_status><MachineNo>2</MachineNo><Status>0</Status></SkyConn_status><SkyConn_status><MachineNo>3</MachineNo><Status>0</Status></SkyConn_status><SkyConn_status><MachineNo>4</MachineNo><Status>0</Status></SkyConn_status></CNC>
+
