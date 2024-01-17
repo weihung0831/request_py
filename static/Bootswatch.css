@@ -12210,6 +12210,7 @@ table,
   font-size: 0.9625rem;
 }
 
+/* index page css */
 #index_title {
   text-align: center;
   margin-top: 100px;
@@ -12224,5 +12225,29 @@ table,
 #index_btn {
   display: block;
   margin: auto;
+  margin-top: 100px;
+}
+
+/* home page css */
+#home_title {
+  text-align: center;
+  margin-top: 100px;
+}
+
+/* work order page css */
+#work_order_title {
+  text-align: center;
+  margin-top: 100px;
+}
+
+/* dispatch work order page css */
+#dispatch_work_order_title {
+  text-align: center;
+  margin-top: 100px;
+}
+
+/* not dispatch work order page css */
+#not_dispatch_work_order_title {
+  text-align: center;
   margin-top: 100px;
 }
