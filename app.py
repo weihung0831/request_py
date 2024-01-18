@@ -3,12 +3,11 @@ import os
 
 from dotenv import load_dotenv
 from flask import Flask, render_template
-from sqlalchemy import MetaData, create_engine
+from sqlalchemy import MetaData, create_engine, desc
 from sqlalchemy.orm import sessionmaker
 
-
 # load json data
-with open("./data/20240115data.json", "r") as f:
+with open("./data/20240109data.json", "r") as f:
     jsonj_data = json.load(f)
 
 # load env
@@ -64,10 +63,29 @@ def get_work_order_data():
     work_order_quantity = [data["QTY"] for data in jsonj_data]
     undelivered_quantity = [data["UN_QTY"] for data in jsonj_data]
 
+    final_work_order_number = []
+    for i in range(len(work_order_number)):
+        try:
+            db_work_order_number = (
+                session.query(work_number_table)
+                .filter(work_number_table.c.name.like(f"%{work_order_number[i]}%"))
+                .order_by(desc(work_number_table.c.time))
+                .first()
+            )
+
+            if db_work_order_number:
+                final_work_order_number.append(
+                    {
+                        "work_order_number": work_order_number[i],
+                    }
+                )
+        except Exception as e:
+            print(e)
+    session.close()
     return json.dumps(
         {
             "result": {
-                "work_order_number": work_order_number,
+                "work_order_number": final_work_order_number,
                 "work_order_quantity": work_order_quantity,
                 "undelivered_quantity": undelivered_quantity,
             },
