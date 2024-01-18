@@ -1,26 +1,30 @@
 <div class="d-flex justify-content-center">
-  <div class="card bg-light mb-3" style="max-width: 20rem">
-    <div class="card-body">
+  <div class="card bg-light mb-3" style="width: 20rem">
+    <div class="card-body text-center">
       <label class="d-inline-block">工單編號：</label>
       <p class="d-inline-block card-text">1234</p>
     </div>
-    <div class="card-body">
-      <label class="d-inline-block">訂單數量：</label>
-      <p class="d-inline-block card-text">100</p>
+    <div class="card-body row">
+      <div class="col-7 d-flex align-items-center">
+        <label>訂單數量：</label>
+        <p class="mb-0 ml-1">100</p>
+      </div>
+      <div class="col-5 d-flex align-items-center">
+        <label>未交數量：</label>
+        <p class="mb-0 ml-1">0</p>
+      </div>
     </div>
-    <div class="card-body">
-      <label class="d-inline-block">未交數量：</label>
-      <p class="d-inline-block card-text">0</p>
+    <div class="card-body row">
+      <div class="col-7 d-flex align-items-center">
+        <label>總數量：</label>
+        <p class="mb-0 ml-1">100</p>
+      </div>
+      <div class="col-5 d-flex align-items-center">
+        <label>剩餘數量：</label>
+        <p class="mb-0 ml-1">0</p>
+      </div>
     </div>
-    <div class="card-body">
-      <label class="d-inline-block">總數量：</label>
-      <p class="d-inline-block card-text">100</p>
-    </div>
-    <div class="card-body">
-      <label class="d-inline-block">剩餘數量：</label>
-      <p class="d-inline-block card-text">100</p>
-    </div>
-    <div class="card-body">
+    <div class="card-body text-center">
       <label class="d-inline-block">水位：</label>
       <input
         type="number"
@@ -29,7 +33,7 @@
       />
     </div>
     <div class="card-body" id="work_order_btn">
-      <button type="button" class="btn btn-dark">送出</button>
+      <button type="button" class="btn btn-outline-secondary">送出</button>
     </div>
   </div>
 </div>
