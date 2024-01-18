@@ -12255,11 +12255,18 @@ table,
   margin-bottom: 50px;
 }
 
-#water_input {
-  width: 100px;
+#card-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
 }
 
-#work_order_btn {
+.card {
+  margin: 15px;
+  margin-top: 30px;
+}
+
+#card-container button {
   display: block;
   margin: auto;
-}
+} 

@@ -28,5 +28,24 @@ def not_dispatch_work_order():
     return render_template("not_dispatch_work_order.html")
 
 
+@app.route("/api/get_work_order_data")
+def get_work_order_data():
+    work_order_number = [data["AUFNR"] for data in jsonj_data]
+    work_order_quantity = [data["QTY"] for data in jsonj_data]
+    undelivered_quantity = [data["UN_QTY"] for data in jsonj_data]
+
+    return json.dumps(
+        {
+            "result": {
+                "work_order_number": work_order_number,
+                "work_order_quantity": work_order_quantity,
+                "undelivered_quantity": undelivered_quantity,
+            },
+            "status": 200,
+            "message": "success",
+        },
+    )
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=80, debug=True)
