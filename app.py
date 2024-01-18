@@ -3,6 +3,8 @@ import os
 
 from dotenv import load_dotenv
 from flask import Flask, render_template
+from sqlalchemy import MetaData, create_engine
+from sqlalchemy.orm import sessionmaker
 
 
 # load json data
