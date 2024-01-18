@@ -1,4 +1,32 @@
+import json
+import os
+
+from dotenv import load_dotenv
 from flask import Flask, render_template
+
+
+# load json data
+with open("./data/20240115data.json", "r") as f:
+    jsonj_data = json.load(f)
+
+# load env
+load_dotenv()
+DB_HOST = os.getenv("DB_HOST")
+DB_USER = os.getenv("DB_USER")
+DB_NAME = os.getenv("DB_NAME")
+
+# connect to mysql
+engine = create_engine(f"mysql+pymysql://{DB_USER}@{DB_HOST}/{DB_NAME}")
+
+metadata = MetaData()
+metadata.reflect(bind=engine)
+
+table_name = "work_number"
+work_number_table = metadata.tables[table_name]
+
+Session = sessionmaker(bind=engine)
+session = Session()
+
 
 app = Flask(__name__)
 
