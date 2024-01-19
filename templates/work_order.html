@@ -17,7 +17,7 @@
   <script>
     api_url = "http://127.0.0.1:80/api";
     axios
-      .get(`${api_url}/get_work_order_data`)
+      .get(`${api_url}/get_all_work_order_data`)
       .then((res) => {
         console.log(res.data);
         const numberOfWorkOrder = res.data.result.work_order_number.map(

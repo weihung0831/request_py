@@ -57,7 +57,7 @@ def not_dispatch_work_order():
     return render_template("not_dispatch_work_order.html")
 
 
-@app.route("/api/get_work_order_data")
+@app.route("/api/get_all_work_order_data")
 def get_work_order_data():
     work_order_number = [data["AUFNR"] for data in jsonj_data]
     work_order_quantity = [data["QTY"] for data in jsonj_data]
