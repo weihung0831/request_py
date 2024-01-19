@@ -12258,13 +12258,11 @@ table,
 #card-container {
   display: flex;
   flex-wrap: wrap;
-  flex-direction: row;
 }
 
 .card {
   margin: 30px;
   margin-top: 30px;
-  /* margin-right: 1rem; */
 }
 
 #card-container button {
