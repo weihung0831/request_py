@@ -20,20 +20,18 @@
       .get(`${api_url}/get_all_work_order_data`)
       .then((res) => {
         console.log(res.data);
-        const numberOfWorkOrder = res.data.result.work_order_number.map(
-          (item) => item.work_order_number
-        );
+        const workOrderNumber = res.data.result.work_order_number;
         const workOrderQuantity = res.data.result.work_order_quantity;
         const undeliveredQuantity = res.data.result.undelivered_quantity;
 
-        // 迴圈 numberOfWorkOrder 陣列並為每個工單建立卡片
-        numberOfWorkOrder.forEach((workOrderNumber, index) => {
+        // 迴圈 workOrderNumber 陣列並為每個工單建立卡片
+        workOrderNumber.forEach((workOrderNumberList, index) => {
           // 填充卡片内容
           let cardHTML = `
           <div class="card bg-light" style="width: 25rem;">
             <div class="card-body text-center">
               <label class="d-inline-block">工單編號：</label>
-              <p class="d-inline-block card-text">${workOrderNumber}</p>
+              <p class="d-inline-block card-text">${workOrderNumberList}</p>
             </div>
             <div class="card-body row">
               <div class="col-7 d-flex align-items-center">
