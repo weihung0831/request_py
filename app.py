@@ -74,11 +74,9 @@ def get_work_order_data():
             )
 
             if db_work_order_number:
-                final_work_order_number.append(
-                    {
-                        "work_order_number": work_order_number[i],
-                    }
-                )
+                final_work_order_number.append(work_order_number[i])
+            else:
+                final_work_order_number.append(work_order_number[i])
         except Exception as e:
             print(e)
     session.close()
