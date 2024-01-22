@@ -70,7 +70,129 @@ def not_dispatch_work_order():
 
 
 # TODO: add work_order_data api
-# @app.route("/api/get_all_work_order_data")
+@app.route("/api/get_all_work_order_data")
+def get_all_work_order_data():
+    # 將 get_dispatch_work_order_data 和 get_no_dispatch_work_order_data 的代碼合併
+    start_time = time.time()
+    # 從 json 資料中提取工單號碼
+    work_order_numbers = [data["AUFNR"] for data in jsonj_data]
+    # 初始化一個字典，用於存儲每個工單的相關資訊
+    dispatch_work_order = {}
+    not_dispatch_work_order = {}
+    # 初始化一個集合，用於存儲已經在工單資料字典中的工單名稱
+    work_order_names = set()
+
+    # 迴圈處理每個工單
+    for work_order_number in work_order_numbers:
+        try:
+            # 從資料庫中查詢工單號碼
+            db_work_order_number_exists = session.query(
+                session.query(work_number_table)
+                .filter(work_number_table.c.name.like(f"%{work_order_number}%"))
+                .exists()
+            ).scalar()
+            # 如果資料庫中有查詢到工單號碼，則更新工單的數量
+            if db_work_order_number_exists:
+                db_work_order_total = (
+                    session.query(work_number_table)
+                    .filter(work_number_table.c.name.like(f"%{work_order_number}%"))
+                    .order_by(desc(work_number_table.c.total))
+                    .all()
+                )
+                # 迴圈處理查詢結果，並更新工單的總數量
+                for record in db_work_order_total:
+                    work_order_name = record.name.split("-")[0]
+                    # 如果工單名稱還未在工單名稱集合中，則將其添加到集合中，並在工單資料字典中為其初始化資訊
+                    if work_order_name not in work_order_names:
+                        work_order_names.add(work_order_name)
+                        dispatch_work_order[work_order_name] = {
+                            "work_order_number": work_order_name,
+                            "work_order_quantity": 0,
+                            "undelivered_quantity": 0,
+                            "total_quantity": 0,
+                            "remaining_quantity": 0,
+                        }
+                    # 如果工單名稱在記錄的名稱中，則將記錄的總數量添加到工單資料字典中對應的工單的總數量上
+                    if work_order_name in record.name:
+                        dispatch_work_order[work_order_name][
+                            "total_quantity"
+                        ] += record.total
+        # 捕獲並打印異常
+        except Exception as e:
+            print(e)
+
+    # 遍歷 jsonj_data 中的每一條數據
+    for data in jsonj_data:
+        # 從 "AUFNR" 字段中獲取工作訂單名稱
+        work_order_name = data["AUFNR"].split("-")[0]
+
+        # 如果工單名稱不在未派發工單的字典中, 則在字典中新增該工單名稱，並初始化相關數量為 0
+        if work_order_name not in not_dispatch_work_order:
+            not_dispatch_work_order[work_order_name] = {
+                "work_order_number": work_order_name,
+                "work_order_quantity": 0,
+                "undelivered_quantity": 0,
+            }
+
+        # 查詢數據庫中是否存在該工作訂單號碼
+        db_work_order_number_exists = session.query(
+            exists().where(work_number_table.c.name.like(f"%{data['AUFNR']}%"))
+        ).scalar()
+
+        # 如果數據庫中不存在該工作訂單號碼，則更新 work_order_data 中的數據
+        if not db_work_order_number_exists:
+            not_dispatch_work_order[work_order_name]["work_order_quantity"] += data[
+                "QTY"
+            ]
+            not_dispatch_work_order[work_order_name]["undelivered_quantity"] += data[
+                "UN_QTY"
+            ]
+        # 如果存在資料庫中存在該工作訂單號碼，則刪除該工作訂單號碼
+        else:
+            del not_dispatch_work_order[work_order_name]
+
+    # 關閉資料庫連接
+    session.close()
+
+    # 將 json 資料轉換為字典，以工單號碼為鍵
+    jsonj_data_dict = {item["AUFNR"]: item for item in jsonj_data}
+    # 迴圈處理工單資料字典，並更新工單的數量資訊
+    for order_number, data in dispatch_work_order.items():
+        # 從 jsonj_data_dict 字典中取出與當前工單號碼對應的項目
+        json_item = jsonj_data_dict.get(order_number)
+        # 如果該項目存在
+        if json_item is not None:
+            # 更新工單資料字典中對應的工單的工單數量
+            data["work_order_quantity"] = json_item["QTY"]
+            # 更新工單資料字典中對應的工單的未交付數量
+            data["undelivered_quantity"] = json_item["UN_QTY"]
+            # 計算並更新工單資料字典中對應的工單的剩餘數量
+            data["remaining_quantity"] = (
+                data["undelivered_quantity"] - data["total_quantity"]
+            )
+
+    # 迴圈處理 JSON 資料
+    for data in jsonj_data:
+        # 從 JSON 資料中取出工單名稱，並分割出工單號碼
+        work_order_name = data["AUFNR"].split("-")[0]
+        # 如果工單號碼在已派發工單的字典中, 則更新該工單的數量和未交付數量
+        if work_order_name in dispatch_work_order:
+            dispatch_work_order[work_order_name]["work_order_quantity"] = data["QTY"]
+            dispatch_work_order[work_order_name]["undelivered_quantity"] = data[
+                "UN_QTY"
+            ]
+
+    end_time = time.time()
+    print("執行時間：", end_time - start_time)
+    # 返回處理後的工單資料
+    return json.dumps(
+        {
+            "dispatch_result": list(dispatch_work_order.values()),
+            "not_dispatch_result": list(not_dispatch_work_order.values()),
+            "status": 200,
+            "message": "success",
+        }
+    )
 
 
 # 定義 API 路由，用於獲取工單數據

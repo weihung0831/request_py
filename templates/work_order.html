@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
+
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -14,4 +15,124 @@
     <div id="card-container"></div>
   </body>
   <script src="../static/js/axios.min.js"></script>
+  <script>
+    // 設定 API 網址
+    api_url = "http://127.0.0.1:80/api";
+
+    // 使用 axios 發送 GET 請求
+    axios
+      .get(`${api_url}/get_all_work_order_data`)
+      .then((res) => {
+        console.log(res.data);
+        const dispatchResult = res.data.dispatch_result;
+        const notDispatchResult = res.data.not_dispatch_result;
+
+        // 迴圈 dispatch_result 陣列並為每個工單建立卡片
+        dispatchResult.forEach((dispatchResultList, index) => {
+          // 填充卡片内容
+          let cardHTML = `
+          <div class="card text-white bg-success mb-3" style="width: 25rem;">
+            <div class="card-body text-center">
+              <label class="d-inline-block">工單編號：</label>
+              <p class="d-inline-block card-text">${dispatchResultList["work_order_number"]}</p>
+            </div>
+            <div class="card-body row">
+              <div class="col-7 d-flex align-items-center">
+                <label>訂單數量：</label>
+                <p class="mb-0 ml-1">${dispatchResultList["work_order_quantity"]}</p>
+              </div>
+              <div class="col-5 d-flex align-items-center">
+                <label>未交數量：</label>
+                <p class="mb-0 ml-1">${dispatchResultList["undelivered_quantity"]}</p>
+              </div>
+            </div>
+            <div class="card-body row">
+              <div class="col-7 d-flex align-items-center">
+                <label>總數量：</label>
+                <p class="mb-0 ml-1">${dispatchResultList["total_quantity"]}</p>
+              </div>
+              <div class="col-5 d-flex align-items-center">
+                <label>剩餘數量：</label>
+                <p class="mb-0 ml-1" id="remaining_quantity_value_${index}">${dispatchResultList["remaining_quantity"]}</p>
+              </div>
+            </div>
+            <form id="water_level_form_${index}">
+              <div class="card-body text-center">
+                <input type="number" class="d-inline-block card-text w-30 mb-4" placeholder="請輸入水位" id="water_level_input_${index}" />
+                <button type="submit" class="btn btn-outline-light mb-3" id="dispatch_work_order_btn_${index}">送出</button>
+              </div>
+            </form>
+          </div>`;
+
+            // 將卡片添加到 "card-container" 元素的末尾
+            document.getElementById("card-container").insertAdjacentHTML("beforeend", cardHTML);
+          });
+
+          // 迴圈 not_dispatch_result 陣列並為每個工單建立卡片
+          notDispatchResult.forEach((notDispatchResultList, index) => {
+            // 填充卡片内容
+            let cardHTML = `
+            <div class="card text-white bg-light" mb-3 style="width: 25rem;">
+              <div class="card-body text-center">
+                <label class="d-inline-block">工單編號：</label>
+                <p class="d-inline-block card-text">${notDispatchResultList["work_order_number"]}</p>
+              </div>
+              <div class="card-body row">
+                <div class="col-7 d-flex align-items-center">
+                  <label>訂單數量：</label>
+                  <p class="mb-0 ml-1">${notDispatchResultList["work_order_quantity"]}</p>
+                </div>
+                <div class="col-5 d-flex align-items-center">
+                  <label>未交數量：</label>
+                  <p class="mb-0 ml-1">${notDispatchResultList["undelivered_quantity"]}</p>
+                </div>
+              </div>
+            </div>`;
+
+            // 將卡片添加到 "card-container" 元素的末尾
+            document.getElementById("card-container").insertAdjacentHTML("beforeend", cardHTML);
+          });
+          
+        })
+          .catch((err) => {
+            console.log(err);
+          });
+
+        // 為 id 為 'card-container' 的元素添加 'submit' 事件監聽器
+        document.getElementById('card-container').addEventListener('submit', function (e) {
+          // 從事件目標中獲取索引
+          // Array.from 將 children 轉換為陣列，然後使用 indexOf 方法找到目標卡片在陣列中的索引
+          let index = Array.from(e.currentTarget.children).indexOf(e.target.closest('.card'));
+
+          // 檢查索引是否不為 -1（也就是說，我們是否找到了卡片）
+          // 並檢查事件目標的 id 是否等於 `water_level_form_${index}`
+          if (index !== -1 && e.target && e.target.id === `water_level_form_${index}`) {
+            // 防止表單的默認提交行為
+            e.preventDefault();
+
+            let waterLevel = 0;
+            let remainingQuantityValue = 0;
+
+            // 尋找水位輸入框，並讀取其值
+            const waterLevelInput = e.target.querySelector(`#water_level_input_${index}`);
+            if (waterLevelInput) {
+              waterLevel = parseFloat(waterLevelInput.value);
+            }
+
+            // 尋找剩餘數量元素，並讀取其值
+            const remainingQuantityElement = document.getElementById(`remaining_quantity_value_${index}`);
+            if (remainingQuantityElement) {
+              remainingQuantityValue = parseFloat(remainingQuantityElement.innerHTML);
+            }
+
+            // 檢查水位是否超過剩餘數量
+            if (remainingQuantityValue < waterLevel) {
+              alert('水位過高，請重新輸入水位');
+            } else {
+              alert('派工成功');
+            }
+          }
+        });
+  </script>
+
 </html>
