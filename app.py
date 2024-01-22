@@ -1,12 +1,12 @@
 import datetime
 import json
 import os
+import time
 
 from dotenv import load_dotenv
 from flask import Flask, render_template
-from sqlalchemy import MetaData, create_engine, desc
+from sqlalchemy import MetaData, create_engine, desc, exists
 from sqlalchemy.orm import sessionmaker
-import time
 
 # 載入 json 資料
 # 獲取當前日期並轉換為 "YYYYMMDD" 格式
@@ -93,7 +93,9 @@ def get_dispatch_work_order_data():
         try:
             # 從資料庫中查詢工單號碼
             db_work_order_number_exists = session.query(
-                session.query(work_number_table).filter(work_number_table.c.name.like(f"%{work_order_number}%")).exists()
+                session.query(work_number_table)
+                .filter(work_number_table.c.name.like(f"%{work_order_number}%"))
+                .exists()
             ).scalar()
             # 如果資料庫中有查詢到工單號碼，則更新工單的數量
             if db_work_order_number_exists:
