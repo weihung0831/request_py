@@ -12258,6 +12258,7 @@ table,
 #card-container {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
 }
 
 .card {
@@ -12268,4 +12269,8 @@ table,
 #card-container button {
   display: block;
   margin: auto;
-} 
+}
+
+input[id^="water_level_input_"] {
+  text-align: center;
+}
