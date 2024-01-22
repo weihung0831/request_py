@@ -59,14 +59,9 @@ def not_dispatch_work_order():
     return render_template("not_dispatch_work_order.html")
 
 
-@app.route("/api/get_all_work_order_data")
-def get_work_order_data():
     work_order_number = [data["AUFNR"] for data in jsonj_data]
-    work_order_quantity = [data["QTY"] for data in jsonj_data]
     undelivered_quantity = [data["UN_QTY"] for data in jsonj_data]
 
-    final_work_order_number = []
-    for i in range(len(work_order_number)):
         try:
             db_work_order_number = (
                 session.query(work_number_table)
@@ -75,22 +70,13 @@ def get_work_order_data():
                 .first()
             )
 
-            if db_work_order_number is None:
-                final_work_order_number.append(work_order_number[i])
-                continue
         except Exception as e:
             print(e)
     session.close()
     return json.dumps(
         {
-            "result": {
-                "work_order_number": final_work_order_number,
-                "work_order_quantity": work_order_quantity,
-                "undelivered_quantity": undelivered_quantity,
-            },
             "status": 200,
             "message": "success",
-        },
     )
 
 
