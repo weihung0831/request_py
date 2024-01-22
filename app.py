@@ -1,3 +1,4 @@
+import datetime
 import json
 import os
 
@@ -7,7 +8,8 @@ from sqlalchemy import MetaData, create_engine, desc
 from sqlalchemy.orm import sessionmaker
 
 # load json data
-with open("./data/20240109data.json", "r") as f:
+now = datetime.datetime.now().strftime("%Y-%m-%d").replace("-", "")
+with open(f"./data/{now}data.json", "r") as f:
     jsonj_data = json.load(f)
 
 # load env
