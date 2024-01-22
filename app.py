@@ -7,29 +7,38 @@ from flask import Flask, render_template
 from sqlalchemy import MetaData, create_engine, desc
 from sqlalchemy.orm import sessionmaker
 
-# load json data
+# 載入 json 資料
+# 獲取當前日期並轉換為 "YYYYMMDD" 格式
 now = datetime.datetime.now().strftime("%Y-%m-%d").replace("-", "")
+# 打開對應日期的 json 檔案並讀取資料
 with open(f"./data/{now}data.json", "r") as f:
     jsonj_data = json.load(f)
 
-# load env
+# 載入環境變數
 load_dotenv()
+# 獲取資料庫主機、使用者名稱和資料庫名稱
 DB_HOST = os.getenv("DB_HOST")
 DB_USER = os.getenv("DB_USER")
 DB_NAME = os.getenv("DB_NAME")
 
-# connect to mysql
+# 連接到 MySQL 資料庫
+# 使用 pymysql 作為資料庫驅動
 engine = create_engine(f"mysql+pymysql://{DB_USER}@{DB_HOST}/{DB_NAME}")
 
+# 建立元數據物件
 metadata = MetaData()
+# 反映資料庫結構
 metadata.reflect(bind=engine)
 
+# 設定要操作的資料表名稱
 table_name = "work_number"
+# 獲取資料表物件
 work_number_table = metadata.tables[table_name]
 
+# 建立 Session 類別
 Session = sessionmaker(bind=engine)
+# 建立 Session 實例
 session = Session()
-
 
 app = Flask(__name__)
 
@@ -59,6 +68,8 @@ def not_dispatch_work_order():
     return render_template("not_dispatch_work_order.html")
 
 
+# TODO: add work_order_data api
+# @app.route("/api/get_all_work_order_data")
 
 
 # 定義 API 路由，用於獲取工單數據
