@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from flask import Flask, render_template
 from sqlalchemy import MetaData, create_engine, desc
 from sqlalchemy.orm import sessionmaker
+import time
 
 # 載入 json 資料
 # 獲取當前日期並轉換為 "YYYYMMDD" 格式
@@ -79,56 +80,45 @@ def get_dispatch_work_order_data():
     這個 get_dispatch_work_order_data 函數從 JSON 檔案中獲取工單數據，查詢資料庫以獲取額外資訊，並將處理後的工單數據以 JSON 回應的形式返回。
     :return: 包含處理後的工單數據的 JSON 字串。
     """
+    start_time = time.time()
     # 從 json 資料中提取工單號碼
-    work_order_number = [data["AUFNR"] for data in jsonj_data]
+    work_order_numbers = [data["AUFNR"] for data in jsonj_data]
     # 初始化一個字典，用於存儲每個工單的相關資訊
     work_order_data = {}
+    # 初始化一個集合，用於存儲已經在工單資料字典中的工單名稱
+    work_order_names = set()
 
     # 迴圈處理每個工單
-    for i in range(len(jsonj_data)):
+    for work_order_number in work_order_numbers:
         try:
             # 從資料庫中查詢工單號碼
-            db_work_order_number = (
-                session.query(work_number_table)
-                .filter(work_number_table.c.name.like(f"%{work_order_number[i]}%"))
-                .order_by(desc(work_number_table.c.time))
-                .first()
-            )
-
-            # 如果查詢到工單號碼
-            if db_work_order_number:
-                # 將查詢結果轉換為字典
-                db_work_order_number_dict = dict(
-                    zip(work_number_table.c.keys(), db_work_order_number)
-                )
-                # 獲取工單名稱
-                work_order_name = db_work_order_number_dict["name"].split("-")[0]
-
-                # 如果工單名稱還未在工單資料字典中，則初始化該工單的資訊
-                if work_order_name not in work_order_data:
-                    work_order_data[work_order_name] = {
-                        "work_order_number": work_order_name,
-                        "work_order_quantity": 0,
-                        "undelivered_quantity": 0,
-                        "total_quantity": 0,
-                        "remaining_quantity": 0,
-                    }
-
-                # 從資料庫中查詢工單的總數量
+            db_work_order_number_exists = session.query(
+                session.query(work_number_table).filter(work_number_table.c.name.like(f"%{work_order_number}%")).exists()
+            ).scalar()
+            # 如果資料庫中有查詢到工單號碼，則更新工單的數量
+            if db_work_order_number_exists:
                 db_work_order_total = (
                     session.query(work_number_table)
-                    .filter(work_number_table.c.name.like(f"%{work_order_number[i]}%"))
+                    .filter(work_number_table.c.name.like(f"%{work_order_number}%"))
                     .order_by(desc(work_number_table.c.total))
                     .all()
                 )
-
                 # 迴圈處理查詢結果，並更新工單的總數量
                 for record in db_work_order_total:
+                    work_order_name = record.name.split("-")[0]
+                    if work_order_name not in work_order_names:
+                        work_order_names.add(work_order_name)
+                        work_order_data[work_order_name] = {
+                            "work_order_number": work_order_name,
+                            "work_order_quantity": 0,
+                            "undelivered_quantity": 0,
+                            "total_quantity": 0,
+                            "remaining_quantity": 0,
+                        }
                     if work_order_name in record.name:
                         work_order_data[work_order_name][
                             "total_quantity"
                         ] += record.total
-
         # 捕獲並打印異常
         except Exception as e:
             print(e)
@@ -146,7 +136,8 @@ def get_dispatch_work_order_data():
             data["remaining_quantity"] = (
                 data["undelivered_quantity"] - data["total_quantity"]
             )
-
+    end_time = time.time()
+    print("執行時間：", end_time - start_time)
     # 返回處理後的工單資料
     return json.dumps(
         {
