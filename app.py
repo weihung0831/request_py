@@ -186,6 +186,9 @@ def get_no_dispatch_work_order_data():
         if not db_work_order_number_exists:
             work_order_data[work_order_name]["work_order_quantity"] += data["QTY"]
             work_order_data[work_order_name]["undelivered_quantity"] += data["UN_QTY"]
+        # 如果存在資料庫中存在該工作訂單號碼，則刪除該工作訂單號碼
+        else:
+            del work_order_data[work_order_name]
 
     # 關閉數據庫連接
     session.close()
