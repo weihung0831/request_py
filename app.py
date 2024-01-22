@@ -75,7 +75,9 @@ def get_work_order_data():
                 .first()
             )
 
-            final_work_order_number.append(work_order_number[i])
+            if db_work_order_number is None:
+                final_work_order_number.append(work_order_number[i])
+                continue
         except Exception as e:
             print(e)
     session.close()
