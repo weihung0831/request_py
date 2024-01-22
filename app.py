@@ -108,6 +108,7 @@ def get_dispatch_work_order_data():
                 # 迴圈處理查詢結果，並更新工單的總數量
                 for record in db_work_order_total:
                     work_order_name = record.name.split("-")[0]
+                    # 如果工單名稱還未在工單名稱集合中，則將其添加到集合中，並在工單資料字典中為其初始化資訊
                     if work_order_name not in work_order_names:
                         work_order_names.add(work_order_name)
                         work_order_data[work_order_name] = {
@@ -117,6 +118,7 @@ def get_dispatch_work_order_data():
                             "total_quantity": 0,
                             "remaining_quantity": 0,
                         }
+                    # 如果工單名稱在記錄的名稱中，則將記錄的總數量添加到工單資料字典中對應的工單的總數量上
                     if work_order_name in record.name:
                         work_order_data[work_order_name][
                             "total_quantity"
@@ -131,10 +133,15 @@ def get_dispatch_work_order_data():
     jsonj_data_dict = {item["AUFNR"]: item for item in jsonj_data}
     # 迴圈處理工單資料字典，並更新工單的數量資訊
     for order_number, data in work_order_data.items():
+        # 從 jsonj_data_dict 字典中取出與當前工單號碼對應的項目
         json_item = jsonj_data_dict.get(order_number)
+        # 如果該項目存在
         if json_item is not None:
+            # 更新工單資料字典中對應的工單的工單數量
             data["work_order_quantity"] = json_item["QTY"]
+            # 更新工單資料字典中對應的工單的未交付數量
             data["undelivered_quantity"] = json_item["UN_QTY"]
+            # 計算並更新工單資料字典中對應的工單的剩餘數量
             data["remaining_quantity"] = (
                 data["undelivered_quantity"] - data["total_quantity"]
             )
