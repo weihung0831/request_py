@@ -157,8 +157,57 @@ def get_dispatch_work_order_data():
     )
 
 
-# TODO: add not_dispatch_work_order_data api
-# @app.route("/api/get_no_dispatch_work_order_data")
+# TODO: 分頁功能
+@app.route("/api/get_no_dispatch_work_order_data")
+def get_no_dispatch_work_order_data():
+    start_time = time.time()
+    # 初始化一個字典來存儲工作訂單數據
+    work_order_data = {}
+
+    # 遍歷 jsonj_data 中的每一條數據
+    for data in jsonj_data:
+        # 從 "AUFNR" 字段中獲取工作訂單名稱
+        work_order_name = data["AUFNR"].split("-")[0]
+
+        # 如果工作訂單名稱不在 work_order_data 中，則添加到 work_order_data 中
+        if work_order_name not in work_order_data:
+            work_order_data[work_order_name] = {
+                "work_order_number": work_order_name,
+                "work_order_quantity": 0,
+                "undelivered_quantity": 0,
+            }
+
+        # 查詢數據庫中是否存在該工作訂單號碼
+        db_work_order_number_exists = session.query(
+            exists().where(work_number_table.c.name.like(f"%{data['AUFNR']}%"))
+        ).scalar()
+
+        # 如果數據庫中不存在該工作訂單號碼，則更新 work_order_data 中的數據
+        if not db_work_order_number_exists:
+            work_order_data[work_order_name]["work_order_quantity"] += data["QTY"]
+            work_order_data[work_order_name]["undelivered_quantity"] += data["UN_QTY"]
+
+    # 關閉數據庫連接
+    session.close()
+
+    # 再次遍歷 jsonj_data 中的每一條數據，並更新 work_order_data 中的數據
+    for data in jsonj_data:
+        work_order_name = data["AUFNR"].split("-")[0]
+        if work_order_name in work_order_data:
+            work_order_data[work_order_name]["work_order_quantity"] = data["QTY"]
+            work_order_data[work_order_name]["undelivered_quantity"] = data["UN_QTY"]
+
+    end_time = time.time()
+    print("執行時間：", end_time - start_time)
+
+    # 返回一個包含結果、狀態和消息的 JSON 字串
+    return json.dumps(
+        {
+            "result": list(work_order_data.values()),
+            "status": 200,
+            "message": "success",
+        }
+    )
 
 
 if __name__ == "__main__":
