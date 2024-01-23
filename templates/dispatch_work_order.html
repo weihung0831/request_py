@@ -87,14 +87,31 @@
         // 防止表單的默認提交行為
         e.preventDefault();
 
-        let waterLevel = 0;
-        let remainingQuantityValue = 0;
+        // 獲取水位輸入欄位
+        let waterLevelInput = e.target.querySelector(`#water_level_input_${index}`);
+        // 將水位輸入轉換為浮點數，如果輸入欄位不存在，則水位為 0
+        let waterLevel = waterLevelInput ? parseFloat(waterLevelInput.value) : 0;
 
-        // 尋找水位輸入框，並讀取其值
-        const waterLevelInput = e.target.querySelector(`#water_level_input_${index}`);
-        if (waterLevelInput) {
-          waterLevel = parseFloat(waterLevelInput.value);
+        // 檢查水位輸入是否為空、無效或小於等於 0
+        if (!waterLevelInput.value || isNaN(waterLevel) || waterLevel <= 0) {
+          // 建立錯誤訊息
+          const error_msg = `
+          <div class="alert alert-dismissible alert-warning">
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <strong>請輸入有效的水位</strong>
+          </div>`;
+          // 插入錯誤訊息
+          var msgElement = document.createElement('div');
+          msgElement.innerHTML = error_msg;
+          document.getElementById("dispatch_work_order_title").insertAdjacentElement("afterend", msgElement);
+          // 設定 2 秒後移除錯誤訊息
+          setTimeout(function () {
+            msgElement.remove();
+          }, 2000);
+          return; // 如果輸入無效，則阻止進一步處理
         }
+
+        let remainingQuantityValue = 0;
 
         // 尋找剩餘數量元素，並讀取其值
         const remainingQuantityElement = document.getElementById(`remaining_quantity_value_${index}`);
