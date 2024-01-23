@@ -104,7 +104,22 @@
 
         // 檢查水位是否超過剩餘數量
         if (remainingQuantityValue < waterLevel) {
-          alert('水位過高，請重新輸入水位');
+          const error_msg = `
+          <div class="alert alert-dismissible alert-danger">
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <strong>水位過高，請重新輸入水位</strong>
+          </div>`
+
+          // 插入錯誤訊息
+          var msgElement = document.createElement('div');
+          msgElement.innerHTML = error_msg;
+          document.getElementById("dispatch_work_order_title").insertAdjacentElement("afterend", msgElement);
+
+          // 設定 2 秒後移除錯誤訊息
+          setTimeout(function () {
+            msgElement.remove();
+          }, 2000);
+
           // 從事件目標元素開始，向上尋找最近的具有 '.card' 類別的元素
           const cardElement = e.target.closest('.card');
           if (cardElement) {
@@ -114,7 +129,21 @@
             cardElement.classList.add('bg-danger');
           }
         } else {
-          alert('派工成功');
+          const success_msg = `
+          <div class="alert alert-dismissible alert-success">
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <strong>派工成功</strong>
+          </div>`
+
+          // 插入成功訊息
+          var msgElement = document.createElement('div');
+          msgElement.innerHTML = success_msg;
+          document.getElementById("dispatch_work_order_title").insertAdjacentElement("afterend", msgElement);
+
+          // 設定 2 秒後移除成功訊息
+          setTimeout(function () {
+            msgElement.remove();
+          }, 2000);
         }
       }
     });
