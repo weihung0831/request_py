@@ -7,6 +7,7 @@
     <title>TBI-SMU</title>
     <link rel="stylesheet" href="../static/css/style.css" />
   </head>
+
   <body>
     {% include 'nav.html' %}
     <div class="container">
@@ -64,15 +65,19 @@
             </form>
           </div>`;
 
-            // 將卡片添加到 "card-container" 元素的末尾
-            document.getElementById("card-container").insertAdjacentHTML("beforeend", cardHTML);
-          });
+          // 將卡片添加到 "card-container" 元素的末尾
+          document.getElementById("card-container").insertAdjacentHTML("beforeend", cardHTML);
+        });
 
-          // 迴圈 not_dispatch_result 陣列並為每個工單建立卡片
-          notDispatchResult.forEach((notDispatchResultList, index) => {
-            // 填充卡片内容
-            let cardHTML = `
-            <div class="card text-white bg-light" mb-3 style="width: 25rem;">
+        // 在 dispatchResult 和 notDispatchResult 之間插入分隔元素
+        let separatorHTML = `<div style="width:100%; height:10px;"></div>`; // 20px 高的空白分隔
+        document.getElementById("card-container").insertAdjacentHTML("beforeend", separatorHTML);
+
+        // 迴圈 not_dispatch_result 陣列並為每個工單建立卡片
+        notDispatchResult.forEach((notDispatchResultList, index) => {
+          // 填充卡片内容
+          let cardHTML = `
+            <div class="card text-white bg-light" id="test" mb-3 style="width: 25rem;">
               <div class="card-body text-center">
                 <label class="d-inline-block">工單編號：</label>
                 <p class="d-inline-block card-text">${notDispatchResultList["work_order_number"]}</p>
