@@ -94,50 +94,59 @@
               </div>
             </div>`;
 
-            // 將卡片添加到 "card-container" 元素的末尾
-            document.getElementById("card-container").insertAdjacentHTML("beforeend", cardHTML);
-          });
-          
-        })
-          .catch((err) => {
-            console.log(err);
-          });
-
-        // 為 id 為 'card-container' 的元素添加 'submit' 事件監聽器
-        document.getElementById('card-container').addEventListener('submit', function (e) {
-          // 從事件目標中獲取索引
-          // Array.from 將 children 轉換為陣列，然後使用 indexOf 方法找到目標卡片在陣列中的索引
-          let index = Array.from(e.currentTarget.children).indexOf(e.target.closest('.card'));
-
-          // 檢查索引是否不為 -1（也就是說，我們是否找到了卡片）
-          // 並檢查事件目標的 id 是否等於 `water_level_form_${index}`
-          if (index !== -1 && e.target && e.target.id === `water_level_form_${index}`) {
-            // 防止表單的默認提交行為
-            e.preventDefault();
-
-            let waterLevel = 0;
-            let remainingQuantityValue = 0;
-
-            // 尋找水位輸入框，並讀取其值
-            const waterLevelInput = e.target.querySelector(`#water_level_input_${index}`);
-            if (waterLevelInput) {
-              waterLevel = parseFloat(waterLevelInput.value);
-            }
-
-            // 尋找剩餘數量元素，並讀取其值
-            const remainingQuantityElement = document.getElementById(`remaining_quantity_value_${index}`);
-            if (remainingQuantityElement) {
-              remainingQuantityValue = parseFloat(remainingQuantityElement.innerHTML);
-            }
-
-            // 檢查水位是否超過剩餘數量
-            if (remainingQuantityValue < waterLevel) {
-              alert('水位過高，請重新輸入水位');
-            } else {
-              alert('派工成功');
-            }
-          }
+          // 將卡片添加到 "card-container" 元素的末尾
+          document.getElementById("card-container").insertAdjacentHTML("beforeend", cardHTML);
         });
+
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+
+    // 為 id 為 'card-container' 的元素添加 'submit' 事件監聽器
+    document.getElementById('card-container').addEventListener('submit', function (e) {
+      // 從事件目標中獲取索引
+      // Array.from 將 children 轉換為陣列，然後使用 indexOf 方法找到目標卡片在陣列中的索引
+      let index = Array.from(e.currentTarget.children).indexOf(e.target.closest('.card'));
+
+      // 檢查索引是否不為 -1（也就是說，我們是否找到了卡片）
+      // 並檢查事件目標的 id 是否等於 `water_level_form_${index}`
+      if (index !== -1 && e.target && e.target.id === `water_level_form_${index}`) {
+        // 防止表單的默認提交行為
+        e.preventDefault();
+
+        let waterLevel = 0;
+        let remainingQuantityValue = 0;
+
+        // 尋找水位輸入框，並讀取其值
+        const waterLevelInput = e.target.querySelector(`#water_level_input_${index}`);
+        if (waterLevelInput) {
+          waterLevel = parseFloat(waterLevelInput.value);
+        }
+
+        // 尋找剩餘數量元素，並讀取其值
+        const remainingQuantityElement = document.getElementById(`remaining_quantity_value_${index}`);
+        if (remainingQuantityElement) {
+          remainingQuantityValue = parseFloat(remainingQuantityElement.innerHTML);
+        }
+
+        // 檢查水位是否超過剩餘數量
+        if (remainingQuantityValue < waterLevel) {
+          alert('水位過高，請重新輸入水位');
+
+          // 從事件目標元素開始，向上尋找最近的具有 '.card' 類別的元素
+          const cardElement = e.target.closest('.card');
+          if (cardElement) {
+            // 如果找到了卡片元素，則移除其 'bg-success' 類別
+            cardElement.classList.remove('bg-success');
+            // 並添加 'bg-danger' 類別
+            cardElement.classList.add('bg-danger');
+          }
+        } else {
+          alert('派工成功');
+        }
+      }
+    });
   </script>
 
 </html>
