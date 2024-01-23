@@ -105,6 +105,14 @@
         // 檢查水位是否超過剩餘數量
         if (remainingQuantityValue < waterLevel) {
           alert('水位過高，請重新輸入水位');
+          // 從事件目標元素開始，向上尋找最近的具有 '.card' 類別的元素
+          const cardElement = e.target.closest('.card');
+          if (cardElement) {
+            // 如果找到了卡片元素，則移除其 'bg-success' 類別
+            cardElement.classList.remove('bg-success');
+            // 並添加 'bg-danger' 類別
+            cardElement.classList.add('bg-danger');
+          }
         } else {
           alert('派工成功');
         }
