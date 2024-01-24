@@ -6,17 +6,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TBI-SMU</title>
     <link rel="stylesheet" href="../static/dist/output.css" />
+    <link href="../static/css/flowbite.min.css" rel="stylesheet" />
   </head>
 
-  <body class="flex items-center justify-center h-screen bg-gray-200">
-    <div class="flex flex-col items-center">
-      <h1 class="text-5xl font-bold mb-10 text-blue-600">TBI</h1>
-      <p id="index_detail" class="mb-10 text-gray-700 text-xl">
+  <body class="flex items-center justify-center h-screen">
+    <div class="flex flex-col items-center px-4 sm:px-6 lg:px-8">
+      <img src="../static/images/TBI Motion Logo.png" class="h-16 mb-10 mt-10"
+        alt="TBI Motion Logo" />
+      <p class="text-2xl text-gray-900 dark:text-white mb-10 mt-10">
         線軌模組精實製造排程系統
       </p>
       <button id="index_btn" type="button"
-        class="px-6 py-3 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-colors mt-4">
-        進入
+        class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center me-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mb-10 mt-10">
+        <svg class="w-5 h-5" aria-hidden="true"
+          xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
+          <path stroke="currentColor" stroke-linecap="round"
+            stroke-linejoin="round" stroke-width="2"
+            d="M1 5h12m0 0L9 1m4 4L9 9" />
+        </svg>
+        <span class="sr-only">Icon description</span>
       </button>
     </div>
   </body>
@@ -25,5 +33,6 @@
       window.location.href = "/home";
     });
   </script>
+  <script src="../static/js/flowbite.min.js"></script>
 
 </html>
