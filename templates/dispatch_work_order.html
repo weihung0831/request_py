@@ -11,8 +11,7 @@
 
   <body>
     {% include 'nav.html' %}
-    <div id="error-msg"></div>
-    <div id="success_msg"></div>
+    <div id="error-alert"></div>
     <div class="flex flex-col items-center px-4 sm:px-6 lg:px-8">
       <p class="text-2xl text-gray-900 dark:text-white mb-10 mt-10">派工單</p>
     </div>
@@ -36,27 +35,27 @@
           let cardHTML = `
             <div class="card max-w-sm p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 mx-4 my-4">
               <div class="flex items-center justify-center mb-4">
-                <label class="text-gray-700 dark:text-gray-400" id="dispatch_work_order_title">工單編號：</label>
-                <p class="text-gray-700 dark:text-gray-400 ml-2">${resultList["work_order_number"]}</p>
+                <label class="text-gray-700 dark:text-gray-300" id="dispatch_work_order_title">工單編號：</label>
+                <p class="text-gray-700 dark:text-gray-300 ml-2">${resultList["work_order_number"]}</p>
               </div>
               <div class="flex justify-center">
                 <div class="flex items-center mt-4 mb-8 mr-8">
-                  <label class="text-gray-700 dark:text-gray-400">訂單數量：</label>
-                  <p class="text-gray-700 dark:text-gray-400">${resultList["work_order_quantity"]}</p>
+                  <label class="text-gray-700 dark:text-gray-300">訂單數量：</label>
+                  <p class="text-gray-700 dark:text-gray-300">${resultList["work_order_quantity"]}</p>
                 </div>
                 <div class="flex items-center mt-4 mb-8">
-                  <label class="text-gray-700 dark:text-gray-400">未交數量：</label>
-                  <p class="text-gray-700 dark:text-gray-400">${resultList["undelivered_quantity"]}</p>
+                  <label class="text-gray-700 dark:text-gray-300">未交數量：</label>
+                  <p class="text-gray-700 dark:text-gray-300">${resultList["undelivered_quantity"]}</p>
                 </div>
               </div>
               <div class="flex justify-center">
                 <div class="flex items-center mb-8 mr-8">
-                  <label class="text-gray-700 dark:text-gray-400">總數量：</label>
-                  <p class="text-gray-700 dark:text-gray-400">${resultList["total_quantity"]}</p>
+                  <label class="text-gray-700 dark:text-gray-300">總數量：</label>
+                  <p class="text-gray-700 dark:text-gray-300">${resultList["total_quantity"]}</p>
                 </div>
                 <div class="flex items-center mb-8">
-                  <label class="text-gray-700 dark:text-gray-400">剩餘數量：</label>
-                  <p class="text-gray-700 dark:text-gray-400" id="remaining_quantity_value_${index}">${resultList["remaining_quantity"]}</p>
+                  <label class="text-gray-700 dark:text-gray-300">剩餘數量：</label>
+                  <p class="text-gray-700 dark:text-gray-300" id="remaining_quantity_value_${index}">${resultList["remaining_quantity"]}</p>
                 </div>
               </div>
               <div class="flex items-center mb-8">
@@ -66,15 +65,7 @@
               </div>
               <form class="max-w-sm mx-auto" id="water_level_form_${index}">
                 <div class="flex items-center justify-center">
-                  <button type="submit"
-                    class="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
-                    送出
-                    <svg class="rtl:rotate-180 w-3.5 h-3.5 ms-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
-                      fill="none" viewBox="0 0 14 10">
-                      <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M1 5h12m0 0L9 1m4 4L9 9" />
-                    </svg>
-                  </button>
+                  <button type="submit" class="py-2.5 px-5 me-2 mb-2 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-full border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-700">送出</button>
                 </div>
               </form>
             </div>`;
@@ -121,7 +112,7 @@
           // 插入錯誤訊息
           var msgElement = document.createElement('div');
           msgElement.innerHTML = error_msg;
-          document.getElementById("error-msg").insertAdjacentElement("afterend", msgElement);
+          document.getElementById("error-alert").insertAdjacentElement("afterend", msgElement);
           // 設定 2 秒後移除錯誤訊息
           setTimeout(function () {
             msgElement.remove();
@@ -138,49 +129,14 @@
           remainingQuantityValue = parseFloat(remainingQuantityElement.innerHTML);
         }
 
-        console.log(remainingQuantityValue);
-        console.log(waterLevel);
-
+        const cardElement = e.target.closest('.card');
         // 檢查水位是否超過剩餘數量
         if (remainingQuantityValue < waterLevel) {
-          const error_msg = `
-          <div class="flex items-center p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
-              <svg class="flex-shrink-0 inline w-4 h-4 me-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
-              </svg>
-              <span class="sr-only">Info</span>
-            <div>
-              <span class="font-medium">水位過高，請重新輸入水位 !</span>
-            </div>
-          </div>`;
-
-          // 插入錯誤訊息
-          var msgElement = document.createElement('div');
-          msgElement.innerHTML = error_msg;
-          document.getElementById("error-msg").insertAdjacentElement("afterend", msgElement);
-          // 設定 2 秒後移除錯誤訊息
-          setTimeout(function () {
-            msgElement.remove();
-          }, 3000);
+          // 將 card 背景顏色改為紅色
+          cardElement.style.backgroundColor = "rgb(169, 68, 56)";
         } else {
-          const success_msg = `
-          <div class="flex items-center p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400" role="alert">
-            <svg class="flex-shrink-0 inline w-4 h-4 me-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
-            </svg>
-            <span class="sr-only">Info</span>
-            <div>
-              <span class="font-medium">派工成功 !</span>
-            </div>
-          </div>`;
-          // 插入成功訊息
-          var msgElement = document.createElement('div');
-          msgElement.innerHTML = success_msg;
-          document.getElementById("success_msg").insertAdjacentElement("afterend", msgElement);
-          // 設定 2 秒後移除成功訊息
-          setTimeout(function () {
-            msgElement.remove();
-          }, 3000);
+          // 將 card 背景顏色改為綠色
+          cardElement.style.backgroundColor = "rgb(80, 141, 105)";
         }
       }
     });
