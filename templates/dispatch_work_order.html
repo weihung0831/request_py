@@ -81,7 +81,7 @@
     document.getElementById('card-container').addEventListener('submit', function (e) {
       // 從事件目標中獲取索引
       // Array.from 將 children 轉換為陣列，然後使用 indexOf 方法找到目標卡片在陣列中的索引
-      let index = Array.from(e.currentTarget.children).indexOf(e.target.closest('.card'));
+      const index = Array.from(e.currentTarget.children).indexOf(e.target.closest('.card'));
 
       // 檢查索引是否不為 -1（也就是說，我們是否找到了卡片）
       // 並檢查事件目標的 id 是否等於 `water_level_form_${index}`
@@ -90,11 +90,11 @@
         e.preventDefault();
 
         // 獲取水位輸入欄位
-        let waterLevelInput = document.getElementById(`water_level_input_${index}`);
+        const waterLevelInput = document.getElementById(`water_level_input_${index}`);
         // 將水位輸入轉換為浮點數，如果輸入欄位不存在，則水位為 0
-        let waterLevel = waterLevelInput ? parseFloat(waterLevelInput.value) : 0;
+        const waterLevel = waterLevelInput ? parseFloat(waterLevelInput.value) : 0;
 
-        let alertDiv = document.querySelector('.alert-div');
+        const alertDiv = document.querySelector('.alert-div');
         // 檢查水位輸入是否為空、無效或小於等於 0
         if (!waterLevelInput.value || isNaN(waterLevel) || waterLevel <= 0) {
           // 建立錯誤訊息
@@ -109,10 +109,10 @@
             </div>
           </div>`;
           // 插入錯誤訊息
-          var msgElement = document.createElement('div');
+          const msgElement = document.createElement('div');
           msgElement.innerHTML = error_msg;
           document.getElementById("error-alert").insertAdjacentElement("afterend", msgElement);
-          // 設定 2 秒後移除錯誤訊息
+          // 設定 5 秒後移除錯誤訊息
           setTimeout(function () {
             msgElement.remove();
           }, 5000);
