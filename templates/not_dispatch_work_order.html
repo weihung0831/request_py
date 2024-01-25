@@ -7,15 +7,15 @@
     <title>TBI-SMU</title>
     <link rel="stylesheet" href="../static/dist/output.css" />
     <link href="../static/css/flowbite.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="../static/css/style.css" />
   </head>
 
   <body>
     {% include 'nav.html' %}
-    <div class="container">
-      <h2 id="not_dispatch_work_order_title">未派工單</h2>
+    <div id="error-alert"></div>
+    <div class="flex flex-col items-center px-4 sm:px-6 lg:px-8">
+      <p class="text-2xl text-gray-900 dark:text-white mb-10 mt-10">未派工單</p>
     </div>
-    <div id="card-container"></div>
+    <div id="card-container" class="flex flex-wrap justify-center -mx-4"></div>
   </body>
   <script src="../static/js/axios.min.js"></script>
   <script>
@@ -33,23 +33,22 @@
         result.forEach((resultList, index) => {
           // 填充卡片内容
           let cardHTML = `
-          <div class="card text-white bg-light mb-3" style="width: 25rem;">
-            <div class="card-body text-center">
-              <label class="d-inline-block">工單編號：</label>
-              <p class="d-inline-block card-text">${resultList["work_order_number"]}</p>
+          <div class="card w-full max-w-sm h-full flex flex-col justify-between p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 mx-4 my-4">
+            <div class="flex items-center justify-center">
+              <p class="mb-2 text-lg font-bold tracking-tight text-gray-900 dark:text-white">工單編號：</p>
+              <p class="mb-2 text-lg font-bold tracking-tight text-gray-900 dark:text-white">${resultList["work_order_number"]}</p>
             </div>
-            <div class="card-body row">
-              <div class="col-7 d-flex align-items-center">
-                <label>訂單數量：</label>
-                <p class="mb-0 ml-1">${resultList["work_order_quantity"]}</p>
+            <div class="flex justify-center">
+              <div class="flex items-center mt-4 mr-8">
+                <label class="text-gray-700 dark:text-gray-300">訂單數量：</label>
+                <p class="text-gray-700 dark:text-gray-300">${resultList["work_order_quantity"]}</p>
               </div>
-              <div class="col-5 d-flex align-items-center">
-                <label>未交數量：</label>
-                <p class="mb-0 ml-1">${resultList["undelivered_quantity"]}</p>
+              <div class="flex items-center mt-4">
+                <label class="text-gray-700 dark:text-gray-300">未交數量：</label>
+                <p class="text-gray-700 dark:text-gray-300">${resultList["undelivered_quantity"]}</p>
               </div>
             </div>
           </div>`;
-
           // 將卡片添加到 "card-container" 元素的末尾
           document.getElementById("card-container").insertAdjacentHTML("beforeend", cardHTML);
         });
