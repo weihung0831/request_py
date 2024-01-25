@@ -11,7 +11,6 @@
 
   <body class="bg-white dark:bg-gray-800 h-screen">
     {% include 'nav.html' %}
-    <div id="error-alert"></div>
     <div class="flex flex-col items-center px-4 sm:px-6 lg:px-8">
       <p class="text-2xl text-gray-900 dark:text-white mb-10 mt-10">派工單</p>
     </div>
@@ -62,7 +61,7 @@
                 <div class="flex items-center mb-8">
                   <input type="number" id="water_level_input_${index}" aria-describedby="helper-text-explanation"
                       class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 text-center"
-                      placeholder="請輸入水位" >
+                      placeholder="請輸入水位"  required>
                 </div>
                 <div class="flex items-center justify-center">
                   <button type="submit" class="py-2.5 px-5 me-2 mb-2 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-full border border-gray-200 hover:bg-gray-100 hover:text-blue-700 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">送出</button>
@@ -94,31 +93,6 @@
         // 將水位輸入轉換為浮點數，如果輸入欄位不存在，則水位為 0
         const waterLevel = waterLevelInput ? parseFloat(waterLevelInput.value) : 0;
 
-        const alertDiv = document.querySelector('.alert-div');
-        // 檢查水位輸入是否為空、無效或小於等於 0
-        if (!waterLevelInput.value || isNaN(waterLevel) || waterLevel <= 0) {
-          // 建立錯誤訊息
-          const error_msg = `
-          <div class="flex items-center p-4 mb-4 text-sm text-red-800 border border-red-300 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400 dark:border-red-800" role="alert">
-            <svg class="flex-shrink-0 inline w-4 h-4 me-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
-            </svg>
-            <span class="sr-only">Info</span>
-            <div>
-              <span class="font-medium">請輸入有效水位 !</span>
-            </div>
-          </div>`;
-          // 插入錯誤訊息
-          const msgElement = document.createElement('div');
-          msgElement.innerHTML = error_msg;
-          document.getElementById("error-alert").insertAdjacentElement("afterend", msgElement);
-          // 設定 5 秒後移除錯誤訊息
-          setTimeout(function () {
-            msgElement.remove();
-          }, 5000);
-          // 如果輸入無效，則阻止進一步處理
-          return;
-        }
 
         let remainingQuantityValue = 0;
 
