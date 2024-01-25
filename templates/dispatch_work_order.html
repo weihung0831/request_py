@@ -53,7 +53,7 @@
                   <p class="text-gray-700 dark:text-gray-300">${resultList["total_quantity"]}</p>
                 </div>
                 <div class="flex items-center mt-4 mb-4">
-                  <label class="text-gray-700 dark:text-gray-300">剩餘數量：</label>
+                  <label class="text-gray-700 dark:text-gray-300" style="margin-left:19px">剩餘數量：</label>
                   <p class="text-gray-700 dark:text-gray-300" id="remaining_quantity_value_${index}">${resultList["remaining_quantity"]}</p>
                 </div>
               </div>
@@ -76,6 +76,16 @@
         console.log(err);
       });
 
+    // const waterLevel = localStorage.getItem('waterLevel');
+    // 從 localStorage 中獲取水位物件
+    const waterLevels = JSON.parse(localStorage.getItem('waterLevels')) || {};
+    // console.log(waterLevels);
+
+    // 在頁面載入時，將 localStorage 中的水位值顯示在輸入欄位中
+    window.addEventListener('load', function () {
+      console.log(waterLevels);
+    });
+
     // 為 id 為 'card-container' 的元素添加 'submit' 事件監聽器
     document.getElementById('card-container').addEventListener('submit', function (e) {
       // 從事件目標中獲取索引
@@ -93,6 +103,10 @@
         // 將水位輸入轉換為浮點數，如果輸入欄位不存在，則水位為 0
         const waterLevel = waterLevelInput ? parseFloat(waterLevelInput.value) : 0;
 
+        // 將水位存儲在 waterLevels 物件中
+        waterLevels[index] = waterLevel;
+        // 將 waterLevels 物件轉換為 JSON 字串, 並存儲在 localStorage 中
+        localStorage.setItem('waterLevels', JSON.stringify(waterLevels));
 
         let remainingQuantityValue = 0;
 
