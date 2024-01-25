@@ -72,9 +72,11 @@
           // 將卡片添加到 "card-container" 元素的末尾
           document.getElementById("card-container").insertAdjacentHTML("beforeend", cardHTML);
 
+
+          // 每 10 分鐘重新整理一次頁面
           setInterval(function () {
             location.reload();
-          }, 100000);
+          }, 600000);
 
         });
       })
