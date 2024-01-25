@@ -4,8 +4,19 @@ import os
 import time
 
 from dotenv import load_dotenv
-from flask import Flask, render_template
-from sqlalchemy import MetaData, create_engine, desc, exists
+from flask import Flask, jsonify, render_template, request
+from sqlalchemy import (
+    Column,
+    DateTime,
+    Float,
+    Integer,
+    MetaData,
+    String,
+    create_engine,
+    desc,
+    exists,
+)
+from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 # 載入 json 資料
@@ -279,7 +290,6 @@ def get_dispatch_work_order_data():
     )
 
 
-# TODO: 分頁功能
 @app.route("/api/get_no_dispatch_work_order_data")
 def get_no_dispatch_work_order_data():
     start_time = time.time()
@@ -333,6 +343,42 @@ def get_no_dispatch_work_order_data():
             "message": "success",
         }
     )
+
+
+def formate_time():
+    return datetime.datetime.now().replace(microsecond=0)
+
+
+Base = declarative_base()
+
+
+class WaterLevel(Base):
+    __tablename__ = "water_level"
+    id = Column(Integer, primary_key=True)
+    work_number = Column(String(255))
+    water_level = Column(Float)
+    created_at = Column(DateTime, default=formate_time)
+
+
+@app.route("/api/send_water_level_data", methods=["POST"])
+def send_water_level_data():
+    try:
+        data = request.get_json()
+        print(data)
+        engine = create_engine("sqlite:///water_level.db")
+        Base.metadata.create_all(engine)
+        Session = sessionmaker(bind=engine)
+        session = Session()
+
+        water_level = WaterLevel(
+            work_number=data["work_order_number"], water_level=data["water_level"]
+        )
+        session.add(water_level)
+        session.commit()
+        return jsonify({"status": 200, "message": "success", "data": data})
+    except Exception as e:
+        print(e)
+        return jsonify({"status": 400, "message": "fail", "data": data})
 
 
 if __name__ == "__main__":

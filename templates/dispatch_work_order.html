@@ -113,8 +113,20 @@
         waterLevels[index] = waterLevel;
         // 將 waterLevels 物件轉換為 JSON 字串, 並存儲在 localStorage 中
         localStorage.setItem('waterLevels', JSON.stringify(waterLevels));
+        const  work_order_number = document.getElementById("work_order_number_" + index).innerHTML;
 
         let remainingQuantityValue = 0;
+        axios
+          .post(`${api_url}/send_water_level_data`, {
+            work_order_number: work_order_number,
+            water_level: waterLevel,
+          })
+          .then((res) => {
+            console.log(res.data);
+          })
+          .catch((err) => {
+            console.log(err);
+          });
 
         // 尋找剩餘數量元素，並讀取其值
         const remainingQuantityElement = document.getElementById(`remaining_quantity_value_${index}`);
