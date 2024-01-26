@@ -81,9 +81,17 @@ def not_dispatch_work_order():
     return render_template("not_dispatch_work_order.html")
 
 
-# TODO: add work_order_data api
 @app.route("/api/get_all_work_order_data")
 def get_all_work_order_data():
+    """
+    get_all_work_order_data 函數結合了 get_dispatch_work_order_data 和 get_no_dispatch_work_order_data 的程式碼，
+    從 JSON 檔案中提取工作訂單數據，查詢數據庫以獲取額外的資訊，並返回處理後的工作訂單數據。 
+    :return: 一個包含以下資訊的 JSON 字串： 
+    - "dispatch_result": 代表已分派工作訂單的字典列表，
+    每個字典包含以下鍵："work_order_number"、"work_order_quantity"、"undelivered_quantity"、"total_quantity" 和 "remaining_quantity"。 
+    - "not_dispatch_result": 代表未分派工作訂單的字典列表，
+    每個字典包含以下鍵："work_order_number"、"work_order_quantity"、"undelivered_quantity"、"total_quantity" 和 "remaining_quantity"。
+    """
     # 將 get_dispatch_work_order_data 和 get_no_dispatch_work_order_data 的代碼合併
     start_time = time.time()
     # 從 json 資料中提取工單號碼
@@ -293,6 +301,13 @@ def get_dispatch_work_order_data():
 
 @app.route("/api/get_no_dispatch_work_order_data")
 def get_no_dispatch_work_order_data():
+    """
+    get_no_dispatch_work_order_data 函數從 JSON 檔案中檢索並處理工作訂單數據，檢查工作訂單號碼是否存在於數據庫中，
+    並將結果返回為 JSON 字串。
+    :return: 一個包含以下鍵的 JSON 字串：
+    "result"、"status" 和 "message"。"result" 鍵包含來自 "work_order_data" 字典的值列表。
+    "status" 鍵設置為 200，表示成功執行。"message" 鍵提供了表示操作成功的訊息。
+    """
     start_time = time.time()
     # 初始化一個字典來存儲工作訂單數據
     work_order_data = {}
@@ -335,7 +350,6 @@ def get_no_dispatch_work_order_data():
 
     end_time = time.time()
     print("執行時間：", end_time - start_time)
-
     # 返回一個包含結果、狀態和消息的 JSON 字串
     return json.dumps(
         {
@@ -363,23 +377,23 @@ class WaterLevel(Base):
 
 @app.route("/api/get_water_level_data", methods=["POST"])
 def send_water_level_data():
-    try:
-        data = request.get_json()
-        print(data)
-        engine = create_engine(f"sqlite:///{SQLITE_DB_NAME}")
-        Base.metadata.create_all(engine)
-        Session = sessionmaker(bind=engine)
-        session = Session()
+    """
+    send_water_level_data 函數接收 JSON 數據，創建一個數據庫引擎，創建一個會話，向數據庫添加一個新的 water_level，
+    提交更改，並返回一個帶有成功消息的 JSON 響應。 
+    :return: 一個帶有 200 狀態碼、成功消息和接收到的數據的 JSON 響應。
+    """
+    data = request.get_json()
+    engine = create_engine(f"sqlite:///{SQLITE_DB_NAME}")
+    Base.metadata.create_all(engine)
+    Session = sessionmaker(bind=engine)
+    session = Session()
 
-        water_level = WaterLevel(
-            work_number=data["work_order_number"], water_level=data["water_level"]
-        )
-        session.add(water_level)
-        session.commit()
-        return jsonify({"status": 200, "message": "success", "data": data})
-    except Exception as e:
-        print(e)
-        return jsonify({"status": 500, "message": "fail", "data": data})
+    water_level = WaterLevel(
+        work_number=data["work_order_number"], water_level=data["water_level"]
+    )
+    session.add(water_level)
+    session.commit()
+    return jsonify({"status": 200, "message": "success", "data": data})
 
 
 @app.route("/api/get_water_level_data", methods=["GET"])
@@ -403,9 +417,9 @@ def get_water_level_data():
         )
         if water_level:
             water_level_dict = water_level.__dict__
+            # 刪除字典中的 "_sa_instance_state" 鍵，因為這是 SQLAlchemy 的內部屬性，不應該被序列化
             del water_level_dict["_sa_instance_state"]
             water_level_data.append(water_level_dict)
-
     session.close()
     return jsonify({"status": 200, "message": "success", "data": water_level_data})
 
