@@ -32,6 +32,7 @@ load_dotenv()
 DB_HOST = os.getenv("DB_HOST")
 DB_USER = os.getenv("DB_USER")
 DB_NAME = os.getenv("DB_NAME")
+SQLITE_DB_NAME = os.getenv("SQLITE_DB_NAME")
 
 # 連接到 MySQL 資料庫
 # 使用 pymysql 作為資料庫驅動
@@ -360,12 +361,12 @@ class WaterLevel(Base):
     created_at = Column(DateTime, default=formate_time)
 
 
-@app.route("/api/send_water_level_data", methods=["POST"])
+@app.route("/api/get_water_level_data", methods=["POST"])
 def send_water_level_data():
     try:
         data = request.get_json()
         print(data)
-        engine = create_engine("sqlite:///water_level.db")
+        engine = create_engine(f"sqlite:///{SQLITE_DB_NAME}")
         Base.metadata.create_all(engine)
         Session = sessionmaker(bind=engine)
         session = Session()
@@ -378,7 +379,35 @@ def send_water_level_data():
         return jsonify({"status": 200, "message": "success", "data": data})
     except Exception as e:
         print(e)
-        return jsonify({"status": 400, "message": "fail", "data": data})
+        return jsonify({"status": 500, "message": "fail", "data": data})
+
+
+@app.route("/api/get_water_level_data", methods=["GET"])
+def get_water_level_data():
+    """
+    get_water_level_data 函數從 SQLite 數據庫中獲取每個不同 work_number 的最新水位數據，並將其作為 JSON 響應返回。
+    :return: 一個帶有 200 狀態碼、"success" 消息和 "data" 字段中的水位數據的 JSON 響應。
+    """
+    engine = create_engine(f"sqlite:///{SQLITE_DB_NAME}")
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+    work_numbers = session.query(WaterLevel.work_number).distinct().all()
+    water_level_data = []
+    for number in work_numbers:
+        water_level = (
+            session.query(WaterLevel)
+            .filter(WaterLevel.work_number == number[0])
+            .order_by(desc(WaterLevel.created_at))
+            .first()
+        )
+        if water_level:
+            water_level_dict = water_level.__dict__
+            del water_level_dict["_sa_instance_state"]
+            water_level_data.append(water_level_dict)
+
+    session.close()
+    return jsonify({"status": 200, "message": "success", "data": water_level_data})
 
 
 if __name__ == "__main__":
