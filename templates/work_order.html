@@ -11,6 +11,7 @@
 
   <body class="bg-white dark:bg-gray-800 h-screen">
     {% include 'nav.html' %}
+    <div class="alert"></div>
     <div class="flex flex-col items-center px-4 sm:px-6 lg:px-8">
       <p class="text-2xl text-gray-900 dark:text-white mb-10 mt-10">全部工單</p>
     </div>
@@ -36,7 +37,7 @@
           <div class="card w-full max-w-sm h-full flex flex-col justify-between p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 mx-4 my-4">
               <div class="flex items-center justify-center">
                 <p class="mb-2 text-lg font-bold tracking-tight text-gray-900 dark:text-white">工單編號：</p>
-                <p class="mb-2 text-lg font-bold tracking-tight text-gray-900 dark:text-white">${dispatchResultList["work_order_number"]}</p>
+                <p id="work_order_number_${index}" class="mb-2 text-lg font-bold tracking-tight text-gray-900 dark:text-white">${dispatchResultList["work_order_number"]}</p>
               </div>
               <div class="flex justify-center">
                 <div class="flex items-center mt-4 mb-4 mr-8">
@@ -71,6 +72,38 @@
             </div>`;
           // 將卡片添加到 "card-container" 元素的末尾
           document.getElementById("card-container").insertAdjacentHTML("beforeend", cardHTML);
+
+          // 發送 GET 請求到指定的 API 獲取水位數據
+          axios.get(`${api_url}/get_water_level_data`).then((res) => {
+            // 從響應中獲取水位數據
+            const waterLevelData = res.data;
+
+            // 從數據中獲取工單號碼和水位
+            const work_order_number = waterLevelData.data[index]['work_number'];
+            const water_level = waterLevelData.data[index]['water_level'];
+
+            // 在對應的工單號碼的水位輸入欄位填入水位
+            document.getElementById(`water_level_input_${index}`).value = water_level;
+
+            // 尋找剩餘數量元素，並讀取其值
+            const remainingQuantityElement = document.getElementById(`remaining_quantity_value_${index}`);
+            let remainingQuantityValue = 0;
+            if (remainingQuantityElement) {
+              remainingQuantityValue = parseFloat(remainingQuantityElement.innerHTML);
+            }
+
+            // 獲取卡片元素
+            const cardElement = document.getElementById(`water_level_form_${index}`).closest('.card');
+
+            // 檢查水位是否超過剩餘數量
+            if (remainingQuantityValue < water_level) {
+              // 如果水位超過剩餘數量，將卡片背景顏色改為紅色
+              cardElement.style.backgroundColor = "rgb(169, 68, 56)";
+            } else {
+              // 如果水位沒有超過剩餘數量，將卡片背景顏色改為綠色
+              cardElement.style.backgroundColor = "rgb(80, 141, 105)";
+            }
+          });
         });
 
         // 在 dispatchResult 和 notDispatchResult 之間插入分隔元素
@@ -122,6 +155,22 @@
         // 將水位輸入轉換為浮點數，如果輸入欄位不存在，則水位為 0
         const waterLevel = waterLevelInput ? parseFloat(waterLevelInput.value) : 0;
 
+        // 從 HTML 文件中獲取工單號碼
+        const work_order_number = document.getElementById("work_order_number_" + index).innerHTML;
+
+        // 發送 POST 請求到指定的 API，並將工單號碼和水位作為請求體發送
+        axios
+          .post(`${api_url}/get_water_level_data`, {
+            work_order_number: work_order_number,
+            water_level: waterLevel,
+          })
+          .then((res) => {
+            console.log(res.data);
+          })
+          .catch((err) => {
+            console.log(err);
+          });
+
         // 初始化剩餘數量值為 0
         let remainingQuantityValue = 0;
         // 尋找剩餘數量元素，並讀取其值
@@ -137,9 +186,40 @@
         if (remainingQuantityValue < waterLevel) {
           // 將 card 背景顏色改為紅色
           cardElement.style.backgroundColor = "rgb(169, 68, 56)";
+          const message = `
+          <div class="flex items-center p-4 mb-4 text-sm text-green-800 border border-green-300 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400 dark:border-green-800" role="alert">
+            <svg class="flex-shrink-0 inline w-4 h-4 me-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
+            </svg>
+            <span class="sr-only">Info</span>
+            <div>
+              <span class="font-medium">設定成功 !</span>
+            </div>
+          </div>`;
+          const alert = document.querySelector('.alert');
+          alert.innerHTML = message;
+          setTimeout(function () {
+            alert.innerHTML = '';
+          }, 5000);
         } else {
           // 將 card 背景顏色改為綠色
           cardElement.style.backgroundColor = "rgb(80, 141, 105)";
+          const message = `
+          <div class="flex items-center p-4 mb-4 text-sm text-green-800 border border-green-300 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400 dark:border-green-800" role="alert">
+            <svg class="flex-shrink-0 inline w-4 h-4 me-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
+            </svg>
+            <span class="sr-only">Info</span>
+            <div>
+              <span class="font-medium">設定成功 !</span>
+            </div>
+          </div>`;
+
+          const alert = document.querySelector('.alert');
+          alert.innerHTML = message;
+          setTimeout(function () {
+            alert.innerHTML = '';
+          }, 5000);
         }
       }
     });
