@@ -36,7 +36,7 @@
             <div class="card w-full max-w-sm h-full flex flex-col justify-between p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 mx-4 my-4">
               <div class="flex items-center justify-center">
                 <p class="mb-2 text-lg font-bold tracking-tight text-gray-900 dark:text-white">工單編號：</p>
-                <p class="mb-2 text-lg font-bold tracking-tight text-gray-900 dark:text-white">${resultList["work_order_number"]}</p>
+                <p id="work_order_number_${index}" class="mb-2 text-lg font-bold tracking-tight text-gray-900 dark:text-white">${resultList["work_order_number"]}</p>
               </div>
               <div class="flex justify-center">
                 <div class="flex items-center mt-4 mb-4 mr-8">
@@ -69,30 +69,49 @@
                 </div>
               </form>
             </div>`;
-          // 將卡片添加到 "card-container" 元素的末尾
+
           document.getElementById("card-container").insertAdjacentHTML("beforeend", cardHTML);
 
+          // 發送 GET 請求到指定的 API 獲取水位數據
+          axios.get(`${api_url}/get_water_level_data`).then((res) => {
+            // 從響應中獲取水位數據
+            const waterLevelData = res.data;
 
-          // 每 10 分鐘重新整理一次頁面
-          setInterval(function () {
-            location.reload();
-          }, 600000);
+            // 從數據中獲取工單號碼和水位
+            const work_order_number = waterLevelData.data[index]['work_number'];
+            const water_level = waterLevelData.data[index]['water_level'];
 
+            // 在對應的工單號碼的水位輸入欄位填入水位
+            document.getElementById(`water_level_input_${index}`).value = water_level;
+
+            // 尋找剩餘數量元素，並讀取其值
+            const remainingQuantityElement = document.getElementById(`remaining_quantity_value_${index}`);
+            let remainingQuantityValue = 0;
+            if (remainingQuantityElement) {
+              remainingQuantityValue = parseFloat(remainingQuantityElement.innerHTML);
+            }
+
+            // 獲取卡片元素
+            const cardElement = document.getElementById(`water_level_form_${index}`).closest('.card');
+
+            // 檢查水位是否超過剩餘數量
+            if (remainingQuantityValue < water_level) {
+              // 如果水位超過剩餘數量，將卡片背景顏色改為紅色
+              cardElement.style.backgroundColor = "rgb(169, 68, 56)";
+            } else {
+              // 如果水位沒有超過剩餘數量，將卡片背景顏色改為綠色
+              cardElement.style.backgroundColor = "rgb(80, 141, 105)";
+            }
+          });
         });
+        // 每 10 分鐘重新整理一次頁面
+        setInterval(function () {
+          location.reload();
+        }, 600000);
       })
       .catch((err) => {
         console.log(err);
       });
-
-    // const waterLevel = localStorage.getItem('waterLevel');
-    // 從 localStorage 中獲取水位物件
-    const waterLevels = JSON.parse(localStorage.getItem('waterLevels')) || {};
-    // console.log(waterLevels);
-
-    // 在頁面載入時，將 localStorage 中的水位值顯示在輸入欄位中
-    window.addEventListener('load', function () {
-      console.log(waterLevels);
-    });
 
     // 為 id 為 'card-container' 的元素添加 'submit' 事件監聽器
     document.getElementById('card-container').addEventListener('submit', function (e) {
@@ -110,16 +129,12 @@
         const waterLevelInput = document.getElementById(`water_level_input_${index}`);
         // 將水位輸入轉換為浮點數，如果輸入欄位不存在，則水位為 0
         const waterLevel = waterLevelInput ? parseFloat(waterLevelInput.value) : 0;
+        // 從 HTML 文件中獲取工單號碼
+        const work_order_number = document.getElementById("work_order_number_" + index).innerHTML;
 
-        // 將水位存儲在 waterLevels 物件中
-        waterLevels[index] = waterLevel;
-        // 將 waterLevels 物件轉換為 JSON 字串, 並存儲在 localStorage 中
-        localStorage.setItem('waterLevels', JSON.stringify(waterLevels));
-        const  work_order_number = document.getElementById("work_order_number_" + index).innerHTML;
-
-        let remainingQuantityValue = 0;
+        // 發送 POST 請求到指定的 API，並將工單號碼和水位作為請求體發送
         axios
-          .post(`${api_url}/send_water_level_data`, {
+          .post(`${api_url}/get_water_level_data`, {
             work_order_number: work_order_number,
             water_level: waterLevel,
           })
@@ -136,6 +151,7 @@
           remainingQuantityValue = parseFloat(remainingQuantityElement.innerHTML);
         }
 
+        // 從事件對象 e 中獲取觸發事件的元素，並找到最近的具有 '.card' 類別的祖先元素
         const cardElement = e.target.closest('.card');
         // 檢查水位是否超過剩餘數量
         if (remainingQuantityValue < waterLevel) {
@@ -169,6 +185,7 @@
               <span class="font-medium">設定成功 !</span>
             </div>
           </div>`;
+
           const alert = document.querySelector('.alert');
           alert.innerHTML = message;
           setTimeout(function () {
