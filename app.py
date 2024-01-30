@@ -85,13 +85,8 @@ def not_dispatch_work_order():
 @app.route("/api/get_all_work_order_data")
 def get_all_work_order_data():
     """
-    get_all_work_order_data 函數結合了 get_dispatch_work_order_data 和 get_no_dispatch_work_order_data 的程式碼，
-    從 JSON 檔案中提取工作訂單數據，查詢數據庫以獲取額外的資訊，並返回處理後的工作訂單數據。 
-    :return: 一個包含以下資訊的 JSON 字串： 
-    - "dispatch_result": 代表已分派工作訂單的字典列表，
-    每個字典包含以下鍵："work_order_number"、"work_order_quantity"、"undelivered_quantity"、"total_quantity" 和 "remaining_quantity"。 
-    - "not_dispatch_result": 代表未分派工作訂單的字典列表，
-    每個字典包含以下鍵："work_order_number"、"work_order_quantity"、"undelivered_quantity"、"total_quantity" 和 "remaining_quantity"。
+    這個 get_all_work_order_data 函數從 JSON 檔案和資料庫中獲取工作訂單數據，結合並處理數據，並返回分頁結果以及總頁數。 
+    :return: 包含分頁結果、總頁數、狀態碼和訊息的 JSON 字串。
     """
     # 將 get_dispatch_work_order_data 和 get_no_dispatch_work_order_data 的代碼合併
     start_time = time.time()
@@ -102,6 +97,12 @@ def get_all_work_order_data():
     not_dispatch_work_order = {}
     # 初始化一個集合，用於存儲已經在工單資料字典中的工單名稱
     work_order_names = set()
+
+    start_time = time.time()  # 記錄開始時間
+    page = int(request.args.get('page', 1))  # 獲取頁碼，預設為1
+    per_page = int(request.args.get('limit', 10))  # 獲取每頁的數量限制，預設為10
+    start_index = (page - 1) * per_page  # 計算起始索引
+    end_index = start_index + per_page  # 計算結束索引
 
     # 迴圈處理每個工單
     for work_order_number in work_order_numbers:
@@ -203,17 +204,23 @@ def get_all_work_order_data():
                 "UN_QTY"
             ]
 
+    # 將 dispatch_work_order 和 not_dispatch_work_order 合併
+    combined_results = list(dispatch_work_order.values()) + list(not_dispatch_work_order.values())
+
+    # 將合併後的結果進行分頁
+    paginated_results = combined_results[start_index:end_index]
+    total_pages = math.ceil(len(combined_results) / per_page)  # 計算總頁數    
+
     end_time = time.time()
     print("執行時間：", end_time - start_time)
-    # 返回處理後的工單資料
-    return json.dumps(
-        {
-            "dispatch_result": list(dispatch_work_order.values()),
-            "not_dispatch_result": list(not_dispatch_work_order.values()),
-            "status": 200,
-            "message": "success",
-        }
-    )
+    
+    # 返回分頁數據、總頁數、狀態碼和訊息
+    return json.dumps({
+        "result": paginated_results,  # 分頁結果
+        "total_pages": total_pages,  # 總頁數
+        "status": 200,  # 狀態碼
+        "message": "success",  # 訊息
+    })
 
 
 # 定義 API 路由，用於獲取工單數據
@@ -302,6 +309,10 @@ def get_dispatch_work_order_data():
 
 @app.route("/api/get_no_dispatch_work_order_data")
 def get_no_dispatch_work_order_data():
+    """
+    get_no_dispatch_work_order_data() 函數從 JSON 檔案中檢索資料，處理它，並返回分頁數據以及總頁數。 
+    :return: 一個包含分頁數據、總頁數、狀態碼和訊息的 JSON 字串。
+    """
     start_time = time.time()  # 記錄開始時間
     page = int(request.args.get('page', 1))  # 獲取頁碼，預設為1
     limit = int(request.args.get('limit', 10))  # 獲取每頁的數量限制，預設為10

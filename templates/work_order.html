@@ -15,224 +15,293 @@
     <div class="flex flex-col items-center px-4 sm:px-6 lg:px-8">
       <p class="text-2xl text-gray-900 dark:text-white mb-10 mt-10">全部工單</p>
     </div>
-    <div id="card-container" class="flex flex-wrap justify-center -mx-4"></div>
-  </body>
-  <script src="../static/js/axios.min.js"></script>
-  <script>
-    // 設定 API 網址
-    api_url = "http://127.0.0.1:80/api";
+    <div id="dispatch-work-order-card-container" class="flex flex-wrap justify-center -mx-4"></div>
+    <div id="not-dispatch-work-order-card-container" class="flex flex-wrap justify-center -mx-4"></div>
+    <nav aria-label="Page navigation" class="mx-auto text-center mt-10">
+      <ul id="pagination" class="flex items-center -space-x-px h-10 text-base justify-center">
+      </ul>
+    </nav>
+    <script src="../static/js/axios.min.js"></script>
+    <script>
+      // 設定 API 網址
+      const api_url = "http://127.0.0.1:80/api";
 
-    // 使用 axios 發送 GET 請求
-    axios
-      .get(`${api_url}/get_all_work_order_data`)
-      .then((res) => {
-        console.log(res.data);
-        const dispatchResult = res.data.dispatch_result;
-        const notDispatchResult = res.data.not_dispatch_result;
+      function loadPage(pagenumber) {
+        // 清空現有的卡片內容
+        document.getElementById("dispatch-work-order-card-container").innerHTML = '';
+        document.getElementById("not-dispatch-work-order-card-container").innerHTML = '';
 
-        // 迴圈 dispatch_result 陣列並為每個工單建立卡片
-        dispatchResult.forEach((dispatchResultList, index) => {
-          // 填充卡片内容
-          let cardHTML = `
-          <div class="card w-full max-w-sm h-full flex flex-col justify-between p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 mx-4 my-4">
-              <div class="flex items-center justify-center">
-                <p class="mb-2 text-lg font-bold tracking-tight text-gray-900 dark:text-white">工單編號：</p>
-                <p id="work_order_number_${index}" class="mb-2 text-lg font-bold tracking-tight text-gray-900 dark:text-white">${dispatchResultList["work_order_number"]}</p>
-              </div>
-              <div class="flex justify-center">
-                <div class="flex items-center mt-4 mb-4 mr-8">
-                  <label class="text-gray-700 dark:text-gray-300">訂單數量：</label>
-                  <p class="text-gray-700 dark:text-gray-300">${dispatchResultList["work_order_quantity"]}</p>
-                </div>
-                <div class="flex items-center mt-4 mb-4">
-                  <label class="text-gray-700 dark:text-gray-300">未交數量：</label>
-                  <p class="text-gray-700 dark:text-gray-300">${dispatchResultList["undelivered_quantity"]}</p>
-                </div>
-              </div>
-              <div class="flex justify-center mb-5">
-                <div class="flex items-center mt-4 mb-4 mr-8">
-                  <label class="text-gray-700 dark:text-gray-300">總數量：</label>
-                  <p class="text-gray-700 dark:text-gray-300">${dispatchResultList["total_quantity"]}</p>
-                </div>
-                <div class="flex items-center mt-4 mb-4">
-                  <label class="text-gray-700 dark:text-gray-300" style="margin-left:19px">剩餘數量：</label>
-                  <p class="text-gray-700 dark:text-gray-300" id="remaining_quantity_value_${index}">${dispatchResultList["remaining_quantity"]}</p>
-                </div>
-              </div>
-              <form class="max-w-sm mx-auto" id="water_level_form_${index}">
-                <div class="flex items-center mb-8">
-                  <input type="number" id="water_level_input_${index}" aria-describedby="helper-text-explanation"
-                      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 text-center"
-                      placeholder="請輸入水位" required>
-                </div>
-                <div class="flex items-center justify-center">
-                  <button type="submit" class="py-2.5 px-5 me-2 mb-2 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-full border border-gray-200 hover:bg-gray-100 hover:text-blue-700 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">送出</button>
-                </div>
-              </form>
-            </div>`;
-          // 將卡片添加到 "card-container" 元素的末尾
-          document.getElementById("card-container").insertAdjacentHTML("beforeend", cardHTML);
-
-          // 發送 GET 請求到指定的 API 獲取水位數據
-          axios.get(`${api_url}/get_water_level_data`).then((res) => {
-            // 從響應中獲取水位數據
-            const waterLevelData = res.data;
-
-            // 從數據中獲取工單號碼和水位
-            const work_order_number = waterLevelData.data[index]['work_number'];
-            const water_level = waterLevelData.data[index]['water_level'];
-
-            // 在對應的工單號碼的水位輸入欄位填入水位
-            document.getElementById(`water_level_input_${index}`).value = water_level;
-
-            // 尋找剩餘數量元素，並讀取其值
-            const remainingQuantityElement = document.getElementById(`remaining_quantity_value_${index}`);
-            let remainingQuantityValue = 0;
-            if (remainingQuantityElement) {
-              remainingQuantityValue = parseFloat(remainingQuantityElement.innerHTML);
-            }
-
-            // 獲取卡片元素
-            const cardElement = document.getElementById(`water_level_form_${index}`).closest('.card');
-
-            // 檢查水位是否超過剩餘數量
-            if (remainingQuantityValue < water_level) {
-              // 如果水位超過剩餘數量，將卡片背景顏色改為紅色
-              cardElement.style.backgroundColor = "rgb(169, 68, 56)";
-            } else {
-              // 如果水位沒有超過剩餘數量，將卡片背景顏色改為綠色
-              cardElement.style.backgroundColor = "rgb(80, 141, 105)";
-            }
-          });
-        });
-
-        // 在 dispatchResult 和 notDispatchResult 之間插入分隔元素
-        const separatorHTML = `<div class="w-full h-2.5"></div>`; // 10px 高的空白分隔
-        document.getElementById("card-container").insertAdjacentHTML("beforeend", separatorHTML);
-
-        // 迴圈 not_dispatch_result 陣列並為每個工單建立卡片
-        notDispatchResult.forEach((notDispatchResultList, index) => {
-          // 填充卡片内容
-          const cardHTML = `
-          <div class="card w-full max-w-sm h-full flex flex-col justify-between p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 mx-4 my-4">
-            <div class="flex items-center justify-center">
-              <p class="mb-2 text-lg font-bold tracking-tight text-gray-900 dark:text-white">工單編號：</p>
-              <p class="mb-2 text-lg font-bold tracking-tight text-gray-900 dark:text-white">${notDispatchResultList["work_order_number"]}</p>
-            </div>
-            <div class="flex justify-center">
-              <div class="flex items-center mt-4 mr-8">
-                <label class="text-gray-700 dark:text-gray-300">訂單數量：</label>
-                <p class="text-gray-700 dark:text-gray-300">${notDispatchResultList["work_order_quantity"]}</p>
-              </div>
-              <div class="flex items-center mt-4">
-                <label class="text-gray-700 dark:text-gray-300">未交數量：</label>
-                <p class="text-gray-700 dark:text-gray-300">${notDispatchResultList["undelivered_quantity"]}</p>
-              </div>
-            </div>
-          </div>`;
-          // 將卡片添加到 "card-container" 元素的末尾
-          document.getElementById("card-container").insertAdjacentHTML("beforeend", cardHTML);
-        });
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-
-    // 為 id 為 'card-container' 的元素添加 'submit' 事件監聽器
-    document.getElementById('card-container').addEventListener('submit', function (e) {
-      // 從事件目標中獲取索引
-      // Array.from 將 children 轉換為陣列，然後使用 indexOf 方法找到目標卡片在陣列中的索引
-      const index = Array.from(e.currentTarget.children).indexOf(e.target.closest('.card'));
-
-      // 檢查索引是否不為 -1（也就是說，我們是否找到了卡片）
-      // 並檢查事件目標的 id 是否等於 `water_level_form_${index}`
-      if (index !== -1 && e.target && e.target.id === `water_level_form_${index}`) {
-        // 防止表單的默認提交行為
-        e.preventDefault();
-
-        // 獲取水位輸入欄位
-        const waterLevelInput = e.target.querySelector(`#water_level_input_${index}`);
-        // 將水位輸入轉換為浮點數，如果輸入欄位不存在，則水位為 0
-        const waterLevel = waterLevelInput ? parseFloat(waterLevelInput.value) : 0;
-
-        // 從 HTML 文件中獲取工單號碼
-        const work_order_number = document.getElementById("work_order_number_" + index).innerHTML;
-
-        // 發送 POST 請求到指定的 API，並將工單號碼和水位作為請求體發送
-        axios
-          .post(`${api_url}/get_water_level_data`, {
-            work_order_number: work_order_number,
-            water_level: waterLevel,
-          })
+        // 使用 axios 發送 GET 請求
+        axios.get(`${api_url}/get_all_work_order_data?page=${pagenumber}&limit=20`)
           .then((res) => {
             console.log(res.data);
+            const result = res.data.result;
+            const totalPages = res.data.total_pages;
+
+            // 迴圈 combinedResults 陣列並為每個工單建立卡片
+            result.forEach((resultList, index) => {
+              if (resultList["remaining_quantity"] == undefined) {
+                let cardHTML = `
+                <div class="card w-full max-w-sm h-full flex flex-col justify-between p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 mx-4 my-4">
+                <div class="flex items-center justify-center">
+                  <p class="mb-2 text-lg font-bold tracking-tight text-gray-900 dark:text-white">工單編號：</p>
+                  <p class="mb-2 text-lg font-bold tracking-tight text-gray-900 dark:text-white">${resultList["work_order_number"]}</p>
+                </div>
+                <div class="flex justify-center">
+                  <div class="flex items-center mt-4 mr-8">
+                    <label class="text-gray-700 dark:text-gray-300">訂單數量：</label>
+                    <p class="text-gray-700 dark:text-gray-300">${resultList["work_order_quantity"]}</p>
+                  </div>
+                  <div class="flex items-center mt-4">
+                    <label class="text-gray-700 dark:text-gray-300">未交數量：</label>
+                    <p class="text-gray-700 dark:text-gray-300">${resultList["undelivered_quantity"]}</p>
+                  </div>
+                </div>
+              </div>`;
+                document.getElementById("not-dispatch-work-order-card-container").insertAdjacentHTML("beforeend", cardHTML);
+                updatePagination(totalPages, pagenumber);
+              } else {
+                let cardHTML = `
+                    <div class="card w-full max-w-sm h-full flex flex-col justify-between p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 mx-4 my-4">
+                      <div class="flex items-center justify-center">
+                        <p class="mb-2 text-lg font-bold tracking-tight text-gray-900 dark:text-white">工單編號：</p>
+                        <p id="work_order_number_${index}" class="mb-2 text-lg font-bold tracking-tight text-gray-900 dark:text-white">${resultList["work_order_number"]}</p>
+                      </div>
+                      <div class="flex justify-center">
+                        <div class="flex items-center mt-4 mb-4 mr-8">
+                          <label class="text-gray-700 dark:text-gray-300">訂單數量：</label>
+                          <p class="text-gray-700 dark:text-gray-300">${resultList["work_order_quantity"]}</p>
+                        </div>
+                        <div class="flex items-center mt-4 mb-4">
+                          <label class="text-gray-700 dark:text-gray-300">未交數量：</label>
+                          <p class="text-gray-700 dark:text-gray-300">${resultList["undelivered_quantity"]}</p>
+                        </div>
+                      </div>
+                      <div class="flex justify-center mb-5">
+                        <div class="flex items-center mt-4 mb-4 mr-8">
+                          <label class="text-gray-700 dark:text-gray-300">總數量：</label>
+                          <p class="text-gray-700 dark:text-gray-300">${resultList["total_quantity"]}</p>
+                        </div>
+                        <div class="flex items-center mt-4 mb-4">
+                          <label class="text-gray-700 dark:text-gray-300" style="margin-left:19px">剩餘數量：</label>
+                          <p class="text-gray-700 dark:text-gray-300" id="remaining_quantity_value_${index}">${resultList["remaining_quantity"]}</p>
+                        </div>
+                      </div>
+                      <form class="max-w-sm mx-auto" id="water_level_form_${index}">
+                        <div class="flex items-center mb-8">
+                          <input type="number" id="water_level_input_${index}" aria-describedby="helper-text-explanation"
+                              class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 text-center"
+                              placeholder="請輸入水位"  required>
+                        </div>
+                        <div class="flex items-center justify-center">
+                          <button type="submit" class="py-2.5 px-5 me-2 mb-2 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-full border border-gray-200 hover:bg-gray-100 hover:text-blue-700 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">送出</button>
+                        </div>
+                      </form>
+                    </div>`;
+                document.getElementById("dispatch-work-order-card-container").insertAdjacentHTML("beforeend", cardHTML);
+                updatePagination(totalPages, pagenumber);
+
+                // 發送 GET 請求到指定的 API 獲取水位數據
+                axios.get(`${api_url}/get_water_level_data`).then((res) => {
+                  // 從響應中獲取水位數據
+                  const waterLevelData = res.data;
+
+                  // 從數據中獲取工單號碼和水位
+                  const work_order_number = waterLevelData.data[index]['work_number'];
+                  const water_level = waterLevelData.data[index]['water_level'];
+
+                  // 在對應的工單號碼的水位輸入欄位填入水位
+                  document.getElementById(`water_level_input_${index}`).value = water_level;
+
+                  // 尋找剩餘數量元素，並讀取其值
+                  const remainingQuantityElement = document.getElementById(`remaining_quantity_value_${index}`);
+                  let remainingQuantityValue = 0;
+                  if (remainingQuantityElement) {
+                    remainingQuantityValue = parseFloat(remainingQuantityElement.innerHTML);
+                  }
+
+                  // 獲取卡片元素
+                  const cardElement = document.getElementById(`water_level_form_${index}`).closest('.card');
+
+                  // 檢查水位是否超過剩餘數量
+                  if (remainingQuantityValue < water_level) {
+                    // 如果水位超過剩餘數量，將卡片背景顏色改為紅色
+                    cardElement.style.backgroundColor = "rgb(169, 68, 56)";
+                  } else {
+                    // 如果水位沒有超過剩餘數量，將卡片背景顏色改為綠色
+                    cardElement.style.backgroundColor = "rgb(80, 141, 105)";
+                  }
+                });
+              }
+            });
+            // 每 10 分鐘重新整理一次頁面
+            // setInterval(function () {
+            //   location.reload();
+            // }, 600000);
           })
           .catch((err) => {
             console.log(err);
           });
-
-        // 初始化剩餘數量值為 0
-        let remainingQuantityValue = 0;
-        // 尋找剩餘數量元素，並讀取其值
-        const remainingQuantityElement = document.getElementById(`remaining_quantity_value_${index}`);
-        // 如果找到了剩餘數量元素
-        if (remainingQuantityElement) {
-          // 讀取元素的內容，並將其轉換為浮點數
-          remainingQuantityValue = parseFloat(remainingQuantityElement.innerHTML);
-        }
-
-        const cardElement = e.target.closest('.card');
-        // 檢查水位是否超過剩餘數量
-        if (remainingQuantityValue < waterLevel) {
-          // 將 card 背景顏色改為紅色
-          cardElement.style.backgroundColor = "rgb(169, 68, 56)";
-          const message = `
-          <div class="flex items-center p-4 mb-4 text-sm text-green-800 border border-green-300 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400 dark:border-green-800" role="alert">
-            <svg class="flex-shrink-0 inline w-4 h-4 me-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
-            </svg>
-            <span class="sr-only">Info</span>
-            <div>
-              <span class="font-medium">設定成功 !</span>
-            </div>
-          </div>`;
-          const alert = document.querySelector('.alert');
-          alert.innerHTML = message;
-          setTimeout(function () {
-            alert.innerHTML = '';
-          }, 5000);
-        } else {
-          // 將 card 背景顏色改為綠色
-          cardElement.style.backgroundColor = "rgb(80, 141, 105)";
-          const message = `
-          <div class="flex items-center p-4 mb-4 text-sm text-green-800 border border-green-300 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400 dark:border-green-800" role="alert">
-            <svg class="flex-shrink-0 inline w-4 h-4 me-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
-            </svg>
-            <span class="sr-only">Info</span>
-            <div>
-              <span class="font-medium">設定成功 !</span>
-            </div>
-          </div>`;
-
-          const alert = document.querySelector('.alert');
-          alert.innerHTML = message;
-          setTimeout(function () {
-            alert.innerHTML = '';
-          }, 5000);
-        }
       }
-    });
-  </script>
-  <script src="../static/js/flowbite.min.js"></script>
-  <!-- dark mode -->
-  <script>
-    // On page load or when changing themes, best to add inline in `head` to avoid FOUC
-    if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark')
-    }
-  </script>
+
+      function updatePagination(totalPages, currentPage) {
+        // 初始化分頁 HTML 字串，包含「上一頁」按鈕
+        let paginationHTML = `
+        <li>
+          <a href="#" onclick="loadPage(Math.max(1, currentPage - 1)); event.preventDefault();" class="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-e-0 border-gray-300 rounded-s-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
+            <span class="sr-only">Previous</span>
+            <!-- 上一頁的圖標 -->
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+          </a>
+        </li>`;
+
+        // 設定最多顯示的頁數
+        const maxPagesToShow = 5;
+        // 計算顯示範圍的起始和結束頁數
+        let rangeStart = currentPage - Math.floor(maxPagesToShow / 2);
+        rangeStart = rangeStart < 1 ? 1 : rangeStart;
+        let rangeEnd = rangeStart + maxPagesToShow - 1;
+        rangeEnd = rangeEnd > totalPages ? totalPages : rangeEnd;
+
+        // 如果起始頁數大於1，則添加「第一頁」按鈕和省略號
+        if (rangeStart > 1) {
+          paginationHTML += `
+          <li>
+            <a href="#" onclick="loadPage(1); event.preventDefault();" class="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">1</a>
+          </li>`;
+          if (rangeStart > 2) {
+            paginationHTML += '<li class="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400">...</li>';
+          }
+        }
+
+        // 為每個在範圍內的頁數添加按鈕
+        for (let i = rangeStart; i <= rangeEnd; i++) {
+          paginationHTML += `
+          <li>
+            <a href="#" onclick="loadPage(${i}); event.preventDefault();" class="flex items-center justify-center px-3 h-8 leading-tight ${i === currentPage ? 'text-blue-600 border border-blue-300 bg-blue-50 hover:bg-blue-100 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white' : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white'}">${i}</a>
+          </li>`;
+        }
+
+        // 如果結束頁數小於總頁數，則添加省略號和「最後一頁」按鈕
+        if (rangeEnd < totalPages) {
+          if (rangeEnd < totalPages - 1) {
+            paginationHTML += '<li class="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400">...</li>';
+          }
+          paginationHTML += `
+          <li>
+            <a href="#" onclick="loadPage(${totalPages}); event.preventDefault();" class="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">${totalPages}</a>
+          </li>`;
+        }
+
+        // 添加「下一頁」按鈕
+        paginationHTML += `
+        <li>
+          <a href="#" onclick="loadPage(Math.min(totalPages, currentPage + 1)); event.preventDefault();" class="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 rounded-e-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
+            <span class="sr-only">Next</span>
+            <!-- 下一頁的圖標 -->
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+          </a>
+        </li>`;
+
+        // 更新分頁控制元素的內容
+        document.getElementById('pagination').innerHTML = paginationHTML;
+      }
+
+      // 加載第一頁的工單資料
+      loadPage(1);
+
+      // 為 id 為 'dispatch-work-order-card-container' 的元素添加 'submit' 事件監聽器
+      document.getElementById('dispatch-work-order-card-container').addEventListener('submit', function (e) {
+        // 從事件目標中獲取索引
+        // Array.from 將 children 轉換為陣列，然後使用 indexOf 方法找到目標卡片在陣列中的索引
+        const index = Array.from(e.currentTarget.children).indexOf(e.target.closest('.card'));
+
+        // 檢查索引是否不為 -1（也就是說，我們是否找到了卡片）
+        // 並檢查事件目標的 id 是否等於 `water_level_form_${index}`
+        if (index !== -1 && e.target && e.target.id === `water_level_form_${index}`) {
+          // 防止表單的默認提交行為
+          e.preventDefault();
+
+          // 獲取水位輸入欄位
+          const waterLevelInput = document.getElementById(`water_level_input_${index}`);
+          // 將水位輸入轉換為浮點數，如果輸入欄位不存在，則水位為 0
+          const waterLevel = waterLevelInput ? parseFloat(waterLevelInput.value) : 0;
+          // 從 HTML 文件中獲取工單號碼
+          const work_order_number = document.getElementById("work_order_number_" + index).innerHTML;
+
+          // 發送 POST 請求到指定的 API，並將工單號碼和水位作為請求體發送
+          axios
+            .post(`${api_url}/get_water_level_data`, {
+              work_order_number: work_order_number,
+              water_level: waterLevel,
+            })
+            .then((res) => {
+              console.log(res.data);
+            })
+            .catch((err) => {
+              console.log(err);
+            });
+
+          // 尋找剩餘數量元素，並讀取其值
+          const remainingQuantityElement = document.getElementById(`remaining_quantity_value_${index}`);
+          if (remainingQuantityElement) {
+            remainingQuantityValue = parseFloat(remainingQuantityElement.innerHTML);
+          }
+
+          // 從事件對象 e 中獲取觸發事件的元素，並找到最近的具有 '.card' 類別的祖先元素
+          const cardElement = e.target.closest('.card');
+          // 檢查水位是否超過剩餘數量
+          if (remainingQuantityValue < waterLevel) {
+            // 將 card 背景顏色改為紅色
+            cardElement.style.backgroundColor = "rgb(169, 68, 56)";
+            const message = `
+          <div class="flex items-center p-4 mb-4 text-sm text-green-800 border border-green-300 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400 dark:border-green-800" role="alert">
+            <svg class="flex-shrink-0 inline w-4 h-4 me-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
+            </svg>
+            <span class="sr-only">Info</span>
+            <div>
+              <span class="font-medium">設定成功 !</span>
+            </div>
+          </div>`;
+            const alert = document.querySelector('.alert');
+            alert.innerHTML = message;
+            setTimeout(function () {
+              alert.innerHTML = '';
+            }, 5000);
+          } else {
+            // 將 card 背景顏色改為綠色
+            cardElement.style.backgroundColor = "rgb(80, 141, 105)";
+            const message = `
+          <div class="flex items-center p-4 mb-4 text-sm text-green-800 border border-green-300 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400 dark:border-green-800" role="alert">
+            <svg class="flex-shrink-0 inline w-4 h-4 me-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
+            </svg>
+            <span class="sr-only">Info</span>
+            <div>
+              <span class="font-medium">設定成功 !</span>
+            </div>
+          </div>`;
+
+            const alert = document.querySelector('.alert');
+            alert.innerHTML = message;
+            setTimeout(function () {
+              alert.innerHTML = '';
+            }, 5000);
+          }
+        }
+      });
+
+    </script>
+    <script src="../static/js/flowbite.min.js"></script>
+    <!-- dark mode -->
+    <script>
+      if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark')
+      }
+    </script>
+  </body>
 
 </html>
