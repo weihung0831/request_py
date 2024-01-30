@@ -2,6 +2,7 @@ import datetime
 import json
 import os
 import time
+import math
 
 from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, request
@@ -301,23 +302,17 @@ def get_dispatch_work_order_data():
 
 @app.route("/api/get_no_dispatch_work_order_data")
 def get_no_dispatch_work_order_data():
-    """
-    get_no_dispatch_work_order_data 函數從 JSON 檔案中檢索並處理工作訂單數據，檢查工作訂單號碼是否存在於數據庫中，
-    並將結果返回為 JSON 字串。
-    :return: 一個包含以下鍵的 JSON 字串：
-    "result"、"status" 和 "message"。"result" 鍵包含來自 "work_order_data" 字典的值列表。
-    "status" 鍵設置為 200，表示成功執行。"message" 鍵提供了表示操作成功的訊息。
-    """
-    start_time = time.time()
-    # 初始化一個字典來存儲工作訂單數據
-    work_order_data = {}
+    start_time = time.time()  # 記錄開始時間
+    page = int(request.args.get('page', 1))  # 獲取頁碼，預設為1
+    limit = int(request.args.get('limit', 10))  # 獲取每頁的數量限制，預設為10
+    start_index = (page - 1) * limit  # 計算起始索引
+    end_index = start_index + limit  # 計算結束索引
+    work_order_data = {}  # 初始化工作訂單資料字典
 
-    # 遍歷 jsonj_data 中的每一條數據
+    # 從 jsonj_data 中獲取資料
     for data in jsonj_data:
-        # 從 "AUFNR" 字段中獲取工作訂單名稱
-        work_order_name = data["AUFNR"].split("-")[0]
-
-        # 如果工作訂單名稱不在 work_order_data 中，則添加到 work_order_data 中
+        work_order_name = data["AUFNR"].split("-")[0]  # 獲取工作訂單名稱
+        # 如果工作訂單名稱不在工作訂單資料字典中，則添加到字典中
         if work_order_name not in work_order_data:
             work_order_data[work_order_name] = {
                 "work_order_number": work_order_name,
@@ -325,40 +320,42 @@ def get_no_dispatch_work_order_data():
                 "undelivered_quantity": 0,
             }
 
-        # 查詢數據庫中是否存在該工作訂單號碼
+        # 檢查資料庫中是否存在工作訂單號碼
         db_work_order_number_exists = session.query(
             exists().where(work_number_table.c.name.like(f"%{data['AUFNR']}%"))
         ).scalar()
 
-        # 如果數據庫中不存在該工作訂單號碼，則更新 work_order_data 中的數據
+        # 如果資料庫中不存在工作訂單號碼，則更新工作訂單資料字典中的數量
         if not db_work_order_number_exists:
             work_order_data[work_order_name]["work_order_quantity"] += data["QTY"]
             work_order_data[work_order_name]["undelivered_quantity"] += data["UN_QTY"]
-        # 如果存在資料庫中存在該工作訂單號碼，則刪除該工作訂單號碼
         else:
+            # 如果資料庫中存在工作訂單號碼，則從工作訂單資料字典中刪除該訂單
             del work_order_data[work_order_name]
+    session.close()  # 關閉資料庫連接
 
-    # 關閉數據庫連接
-    session.close()
-
-    # 再次遍歷 jsonj_data 中的每一條數據，並更新 work_order_data 中的數據
+    # 再次從 jsonj_data 中獲取資料，並更新工作訂單資料字典中的數量
     for data in jsonj_data:
         work_order_name = data["AUFNR"].split("-")[0]
         if work_order_name in work_order_data:
             work_order_data[work_order_name]["work_order_quantity"] = data["QTY"]
             work_order_data[work_order_name]["undelivered_quantity"] = data["UN_QTY"]
 
-    end_time = time.time()
-    print("執行時間：", end_time - start_time)
-    # 返回一個包含結果、狀態和消息的 JSON 字串
+    # 從工作訂單資料字典中獲取分頁資料
+    paginated_data = list(work_order_data.values())[start_index:end_index]
+    total_pages = math.ceil(len(work_order_data) / limit)  # 計算總頁數
+
+    end_time = time.time()  # 記錄結束時間
+    print("執行時間：", end_time - start_time)  # 輸出執行時間
+    # 返回分頁資料、總頁數、狀態碼和訊息
     return json.dumps(
         {
-            "result": list(work_order_data.values()),
+            "result": paginated_data,
+            "total_pages": total_pages,
             "status": 200,
             "message": "success",
         }
     )
-
 
 def formate_time():
     return datetime.datetime.now().replace(microsecond=0)
