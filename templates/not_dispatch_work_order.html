@@ -25,9 +25,6 @@
   <script>
     // 設定 API 網址
     api_url = "http://127.0.0.1:80/api";
-    
-
-    
 
     function loadPage(pagenumber) {
       // 清空現有的卡片內容
@@ -71,31 +68,61 @@
         });
     }
 
-    // 定義一個函數來更新分頁控制元素
     function updatePagination(totalPages, currentPage) {
+      // 初始化分頁 HTML 字串，包含「上一頁」按鈕
       let paginationHTML = `
         <li>
-          <a href="#" onclick="loadPage(Math.max(1, currentPage - 1)); event.preventDefault();" class="flex items-center justify-center px-3 h-8 ms-0 leading-tight text-gray-500 bg-white border border-e-0 border-gray-300 rounded-s-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
+          <a href="#" onclick="loadPage(Math.max(1, currentPage - 1)); event.preventDefault();" class="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-e-0 border-gray-300 rounded-s-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
             <span class="sr-only">Previous</span>
-            <svg class="w-2.5 h-2.5 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
-              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 1 1 5l4 4"/>
-            </svg>
+            <!-- 上一頁的圖標 -->
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
           </a>
         </li>`;
 
-      for (let i = 1; i <= totalPages; i++) {
+      // 設定最多顯示的頁數
+      const maxPagesToShow = 5;
+      // 計算顯示範圍的起始和結束頁數
+      let rangeStart = currentPage - Math.floor(maxPagesToShow / 2);
+      rangeStart = rangeStart < 1 ? 1 : rangeStart;
+      let rangeEnd = rangeStart + maxPagesToShow - 1;
+      rangeEnd = rangeEnd > totalPages ? totalPages : rangeEnd;
+
+      // 如果起始頁數大於1，則添加「第一頁」按鈕和省略號
+      if (rangeStart > 1) {
+        paginationHTML += `
+          <li>
+            <a href="#" onclick="loadPage(1); event.preventDefault();" class="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">1</a>
+          </li>`;
+        if (rangeStart > 2) {
+          paginationHTML += '<li class="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400">...</li>';
+        }
+      }
+
+      // 為每個在範圍內的頁數添加按鈕
+      for (let i = rangeStart; i <= rangeEnd; i++) {
         paginationHTML += `<li>
-          <a href="#" class="flex items-center justify-center px-3 h-8 leading-tight ${i === currentPage ? 'text-blue-600 border border-blue-300 bg-blue-50 hover:bg-blue-100 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white' : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white'}" onclick="loadPage(${i}); event.preventDefault();">${i}</a>
+          <a href="#" onclick="loadPage(${i}); event.preventDefault();" class="flex items-center justify-center px-3 h-8 leading-tight ${i === currentPage ? 'text-blue-600 border border-blue-300 bg-blue-50 hover:bg-blue-100 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white' : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white'}">${i}</a>
+        </li>`;
+      }
+
+      // 如果結束頁數小於總頁數，則添加省略號和「最後一頁」按鈕
+      if (rangeEnd < totalPages) {
+        if (rangeEnd < totalPages - 1) {
+          paginationHTML += '<li class="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400">...</li>';
+        }
+        paginationHTML += `
+          <li>
+            <a href="#" onclick="loadPage(${totalPages}); event.preventDefault();" class="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">${totalPages}</a>
           </li>`;
       }
 
+      // 添加「下一頁」按鈕
       paginationHTML += `
         <li>
           <a href="#" onclick="loadPage(Math.min(totalPages, currentPage + 1)); event.preventDefault();" class="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 rounded-e-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
             <span class="sr-only">Next</span>
-            <svg class="w-2.5 h-2.5 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
-              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
-            </svg>
+            <!-- 下一頁的圖標 -->
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
           </a>
         </li>`;
 
